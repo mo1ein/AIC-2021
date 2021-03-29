@@ -19,6 +19,8 @@
 
 int Controller::thread_count = 0;
 
+int getDirectionNum(Direction direction);
+
 Controller::Controller(const string &host, uint16_t port, const string &token, unsigned retry_delay)
         : m_token(token)
         , m_retry_delay(retry_delay)
@@ -120,7 +122,11 @@ void Controller::turn_event(AI *client, Game *tmp_game, EventQueue *m_event_queu
     int THREAD_NUM = Controller::thread_count++;
     try {
         Logger::Get(LogLevel_DEBUG) << "Launched action Thread #" << THREAD_NUM << endl;
-        client->turn(tmp_game);
+        Answer* answer = client->turn(tmp_game);
+
+        m_event_queue->push(CreateMovementMessage(getDirectionNum(answer->getDirection())));
+        if (!answer->getMessage().empty())
+            m_event_queue->push(CreateChatBoxMessage(answer->getMessage(), answer->getMessageValue()));
     }
     catch (const char *err_msg) {
         Logger::Get(LogLevel_ERROR) << "Error in action Thread #" << THREAD_NUM << endl
@@ -128,9 +134,25 @@ void Controller::turn_event(AI *client, Game *tmp_game, EventQueue *m_event_queu
     }
 
     Logger::Get(LogLevel_TRACE) << "action:Sending end message" << endl;
-    // TODO : FIX below
     m_event_queue->push(CreateEndTurnMessage());
 
     delete tmp_game;
     Logger::Get(LogLevel_DEBUG) << "End of action Thread #" << THREAD_NUM << endl;
+}
+
+int getDirectionNum(Direction direction) {
+    switch (direction) {
+        case UP:
+            return 2;
+        case DOWN:
+            return 4;
+        case LEFT:
+            return 3;
+        case RIGHT:
+            return 1;
+        case CENTER:
+            return 0;
+        default:
+            return -1;
+    }
 }

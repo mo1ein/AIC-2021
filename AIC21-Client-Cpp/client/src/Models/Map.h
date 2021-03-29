@@ -12,14 +12,15 @@ class Map {
 
 public:
     Map(const vector<vector<Cell*>>& cells, int width, int height, int manhattanDistance, int currentX, int currentY);
-    Cell* getCell(int dx, int dy, int distance);
+    Cell* getCell(int dx, int dy);
 
 private:
     vector<vector<Cell*>> cells_;   //Todo vector<vector*>* ?
     int width_;
     int height_;
     int manhattan_distance_;
-    vector<vector<Cell*>> createCompressedCells(const vector<vector<Cell*>>& cells, int midX, int midY);
+    int ant_x_;
+    int ant_y_;
 
 };
 

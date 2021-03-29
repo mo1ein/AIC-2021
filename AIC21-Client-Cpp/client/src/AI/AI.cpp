@@ -8,7 +8,7 @@ Answer *AI::turn(Game *game) {
     Ant* me = game->getAnt();
     cout << me->getHealth() << " " << me->getTeam() << endl;
 
-    /* int viewDist = me->getViewDistance();
+    int viewDist = me->getViewDistance();
     int targetX = -1, targetY = -1;
     if (me->getType() == KARGAR) {
         for (int i = 0; i < viewDist; i++) {
@@ -43,7 +43,6 @@ Answer *AI::turn(Game *game) {
     }
     else {
         direction = UP;
-    } */
-    Direction dir = CENTER;
-    return new Answer(dir, "I found a resource and I'm going to get it! :)", 10);
+    }
+    return new Answer(direction, "I found a resource and I'm going to get it! :)", 10);
 }

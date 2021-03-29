@@ -52,7 +52,7 @@ int Ant::getViewDistance()
 
 Cell *Ant::getNeighborCell(int xStep, int yStep)
 {
-    return visible_map_->getCell(xStep, yStep, view_distance_);
+    return visible_map_->getCell(xStep, yStep);
 }
 
 AntType Ant::getType()
