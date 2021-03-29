@@ -4,7 +4,6 @@
 ./server/Log/*
 ./server/client
 ./AIC21-Client-Cpp/build/*
-./WebGlV1.0/log.js
 
 *.zip 
 
