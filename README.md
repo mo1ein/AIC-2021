@@ -3,9 +3,9 @@ All things for AIC 2021
 - [x] signup AIC
 - [x] create team
 - [x] run server
-- [x] main logic
-- [ ] find best path
+- [ ] write cheatsheet
 - [ ] scenarios
+- [ ] main logic
 
 
 
