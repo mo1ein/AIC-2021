@@ -2,8 +2,8 @@
 
 #include <utility>
 
-ChatBox::ChatBox(vector<Chat*> allChats) {
-    all_chats_ = std::move(allChats);
+ChatBox::ChatBox(const vector<const Chat*>& allChats) {
+    all_chats_ = allChats;
 }
 
 ChatBox::~ChatBox() {
@@ -12,14 +12,14 @@ ChatBox::~ChatBox() {
     }
 }
 
-vector<Chat*> ChatBox::getAllChatsOfTurn(int turnNumber) {
-    vector<Chat*> output;
-    for(Chat* chat : all_chats_)
+vector<const Chat*> ChatBox::getAllChatsOfTurn(int turnNumber) const {
+    vector<const Chat*> output;
+    for(const Chat* chat : all_chats_)
         if(chat->getTurn() == turnNumber)
             output.push_back(chat);
     return output;
 }
 
-vector<Chat*>* ChatBox::getAllChats() {
-    return &all_chats_;
+const vector<const Chat*>& ChatBox::getAllChats() const {
+    return all_chats_;
 }

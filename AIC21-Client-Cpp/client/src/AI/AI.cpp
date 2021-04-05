@@ -9,10 +9,13 @@ using namespace std;
 pair<int, int> getResourcePoints(const Ant* me) {
     const Cell* cell = me->getNeighborCell(0, -1);
     if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
+  
     cell = me->getNeighborCell(-1, 0);
     if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
+  
     cell = me->getNeighborCell(1, 0);
     if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
+  
     cell = me->getNeighborCell(0, 1);
     if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
 
@@ -60,10 +63,13 @@ pair<int, int> getResourcePoints(const Ant* me) {
 pair<int, int> getRandomPoints(const Ant* me) {
     const Cell* cell = me->getNeighborCell(0, -1);
     if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
+  
     cell = me->getNeighborCell(-1, 0);
     if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
+  
     cell = me->getNeighborCell(1, 0);
     if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
+  
     cell = me->getNeighborCell(0, 1);
     return {cell->getX(), cell->getY()};
 }
@@ -73,7 +79,8 @@ Direction AI::getDirection(const Ant* me) {
     int x = me->getX();
     int y = me->getY();
     
-    if (goingPath.size() != 0) {
+    if (goingPath.size() != 0)
+    {
         pair<int, int> latestPath = goingPath.back();
         goingPath.pop_back();
         if (latestPath.second < y) {
@@ -98,6 +105,7 @@ Direction AI::getDirection(const Ant* me) {
 
 // The whole part of finding shortest path
 vector<pair<int, int>> directions{{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
 // https://www.geeksforgeeks.org/how-to-create-an-unordered_map-of-pairs-in-c
 struct hash_pair {
     size_t operator()(const pair<int, int>& p) const
@@ -107,6 +115,7 @@ struct hash_pair {
         return hash1 ^ hash2;
     }
 };
+
 vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
 {
     pair<int, int> node;
@@ -169,18 +178,19 @@ void AI::saveMap(const Ant* me) {
                 else {
                     savedMap[cell->getX()][cell->getY()] = 1;
                 }
-
             }
         }
-
 }
 
-Answer* AI::turn(Game* game) {
+Answer* AI::turn(Game* game)
+{
     // Initialize all matrix elements to -1 at beginning of the game
-    if (currentTurn == 0) {
+    if (currentTurn == 0)
+    {
         int width=game->getMapWidth();
         int height=game->getMapHeight();
         savedMap.resize(width);
+      
         for (int i=0; i < width; ++i)
             savedMap[i].resize(height);
         
@@ -218,6 +228,7 @@ Answer* AI::turn(Game* game) {
         nextGoingPoints = getRandomPoints(me);
         currentStatus = "Going to some random direction";
     }
+  
     if (goingPath.size() == 0) {
         goingPath = findPath(me, nextGoingPoints);
     }
@@ -225,5 +236,4 @@ Answer* AI::turn(Game* game) {
     ++currentTurn;
     Direction direction = getDirection(me);
     return new Answer(direction, currentStatus, 10);
-    
 }

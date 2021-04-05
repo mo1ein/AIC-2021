@@ -5,10 +5,10 @@ Resource::Resource(ResourceType type, int value) {
     value_ = value;
 }
 
-ResourceType Resource::getType() {
+ResourceType Resource::getType() const {
     return type_;
 }
 
-int Resource::getValue() {
+int Resource::getValue() const {
     return value_;
 }

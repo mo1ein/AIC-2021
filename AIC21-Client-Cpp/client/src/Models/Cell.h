@@ -15,12 +15,11 @@ public:
     Cell(CellType type, int x, int y, Resource* resource);
     Cell(const Cell&);  //Todo why is this needed?
     ~Cell();
-    int getX();
-    int getY();
-    CellType getType();
-    Resource* getResource();
-    vector<const Ant*> getPresentAnts();
-    void addAntToCell(const Ant *ant);
+    int getX() const;
+    int getY() const;
+    CellType getType() const;
+    const Resource* getResource() const;
+    const vector<const Ant*>& getPresentAnts() const;
 
 private:
     int x_;
@@ -28,6 +27,9 @@ private:
     CellType type_;
     Resource* resource_;
     vector<const Ant*> present_ants_;
+    void addAntToCell(const Ant *ant);
+
+    friend class Game;
 };
 
 

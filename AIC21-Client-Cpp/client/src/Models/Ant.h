@@ -14,17 +14,18 @@ class Ant {
 
 public:
     Ant(AntType type, AntTeam team, int x, int y);
-    Ant(AntType type, AntTeam team, int viewDistance, Map &map, Resource *resource, int x, int y, int health);
+    Ant(AntType type, AntTeam team, int viewDistance, int attackDistance, Map &map, Resource *resource, int x, int y, int health);
     ~Ant();
-    Cell* getNeighborCell(int xStep, int yStep);
-    int getX();
-    int getY();
-    Cell* getLocationCell();
-    AntType getType();
-    AntTeam getTeam();
-    Resource* getCurrentResource();
-    int getHealth();
-    int getViewDistance();
+    const Cell* getNeighborCell(int xStep, int yStep) const;
+    int getX() const;
+    int getY() const;
+    const Cell* getLocationCell() const;
+    AntType getType() const;
+    AntTeam getTeam() const;
+    const Resource* getCurrentResource() const;
+    int getHealth() const;
+    int getViewDistance() const;
+    int getAttackDistance() const;
 
 private:
     AntType type_;
@@ -35,6 +36,7 @@ private:
     int health_;
     Map* visible_map_;
     int view_distance_;
+    int attack_distance_;
 };
 
 #endif //AIC21_CLIENT_CPP_ANT_H

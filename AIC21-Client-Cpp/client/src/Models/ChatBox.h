@@ -10,13 +10,13 @@ using namespace std;
 class ChatBox {
 
 private:
-    vector<Chat*> all_chats_;
+    vector<const Chat*> all_chats_;
 
 public:
-    ChatBox(vector<Chat*> allChats);
+    explicit ChatBox(const vector<const Chat*>& allChats);
     ~ChatBox();
-    vector<Chat*> getAllChatsOfTurn(int turnNumber);
-    vector<Chat*>* getAllChats();
+    vector<const Chat*> getAllChatsOfTurn(int turnNumber) const;
+    const vector<const Chat*>& getAllChats() const;
 };
 
 #endif //AIC21_CLIENT_CPP_CHATBOX_H

@@ -9,8 +9,8 @@ public:
     Resource() = default;
     ~Resource() = default;
     Resource(ResourceType type, int value);
-    ResourceType getType();
-    int getValue();
+    ResourceType getType() const;
+    int getValue() const;
 
 private:
     ResourceType type_;

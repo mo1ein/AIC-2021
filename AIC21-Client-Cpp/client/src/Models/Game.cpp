@@ -18,9 +18,10 @@ Game::Game(const Game& game) : event_queue_(game.event_queue_) {
     generate_kargar_ = game.getGenerateKargar();
     generate_sarbaaz_ = game.getGenerateSarbaaz();
     rate_death_resource_ = game.getRateDeathResource();
+    view_distance_ = game.getViewDistance();
 }
 
-Ant* Game::getAnt() const {
+const Ant* Game::getAnt() const {
     return ant_;
 }
 
@@ -28,7 +29,7 @@ AntType Game::getAntType() const {
     return ant_type_;
 }
 
-ChatBox* Game::getChatBox() const {
+const ChatBox* Game::getChatBox() const {
     return chat_box_;
 }
 
@@ -85,21 +86,22 @@ void Game::initGameConfig(GameConfigMessage *initMessage) {
     generate_kargar_ = infoJson["generate_kargar"];
     generate_sarbaaz_ = infoJson["generate_sarbaaz"];
     rate_death_resource_ = infoJson["rate_death_resource"];
+    view_distance_ = infoJson["view_distance"];
 }
 
 void Game::setCurrentState(CurrentStateMessage *currentStateMessage) {
     json infoJson = currentStateMessage->getInfo();
 
     //chat box
-//    Logger::Get(LogLevel_TRACE) << "creating chat box" << endl;
-    vector<Chat*> allChats;
+    Logger::Get(LogLevel_TRACE) << "creating chat box" << endl;
+    vector<const Chat*> allChats;
     for (json chatJson : infoJson["chat_box"]) {
         allChats.push_back(new Chat(chatJson["text"], chatJson["turn"]));
     }
     chat_box_ = new ChatBox(allChats);
 
     //map
-//    Logger::Get(LogLevel_TRACE) << "creating map" << endl;
+    Logger::Get(LogLevel_TRACE) << "creating map" << endl;
     vector<vector<Cell*>> mapCells(map_width_, vector<Cell*>(map_height_));
     for (json cellJson : infoJson["around_cells"]) {
         int x = cellJson["cell_x"];
@@ -113,19 +115,38 @@ void Game::setCurrentState(CurrentStateMessage *currentStateMessage) {
         }
     }
 
-//    Logger::Get(LogLevel_TRACE) << "creating map instance" << endl;
+    Logger::Get(LogLevel_TRACE) << "creating map instance" << endl;
     Map* map = new Map(mapCells, map_width_, map_height_, attack_distance_,
             infoJson["current_x"], infoJson["current_y"]);
 
     //ant
-//    Logger::Get(LogLevel_TRACE) << "creating ant" << endl;
-    ant_ = new Ant(ant_type_, ALLY, attack_distance_, *map,
+    Logger::Get(LogLevel_TRACE) << "creating ant" << endl;
+    ant_ = new Ant(ant_type_, ALLY, view_distance_, attack_distance_, *map,
             new Resource(EnumUtils::getResourceTypeByInt(infoJson["current_resource_type"]),
                     infoJson["current_resource_value"]),
             infoJson["current_x"], infoJson["current_y"], infoJson["health"]);
+
+    //attacks
+    Logger::Get(LogLevel_TRACE) << "creating attacks" << endl;
+    for (json attackJson : infoJson["attacks"]) {
+        attacks.push_back(new Attack(attackJson["attacker_col"], attackJson["attacker_row"],
+                attackJson["defender_col"], attackJson["defender_row"],
+                attackJson["is_attacker_enemy"]));
+    }
 }
 
 Game::~Game() {
     delete chat_box_;
     delete ant_;
+    for (const Attack* attack: attacks) {
+        delete attack;
+    }
+}
+
+int Game::getViewDistance() const {
+    return view_distance_;
+}
+
+const vector<const Attack *> &Game::getAttacks() const {
+    return attacks;
 }

@@ -123,10 +123,12 @@ void Controller::turn_event(AI *client, Game *tmp_game, EventQueue *m_event_queu
     try {
         Logger::Get(LogLevel_DEBUG) << "Launched action Thread #" << THREAD_NUM << endl;
         Answer* answer = client->turn(tmp_game);
+        Logger::Get(LogLevel_TRACE) << "Recieved client answer" << endl;
 
         m_event_queue->push(CreateMovementMessage(getDirectionNum(answer->getDirection())));
         if (!answer->getMessage().empty())
             m_event_queue->push(CreateChatBoxMessage(answer->getMessage(), answer->getMessageValue()));
+        delete answer;
     }
     catch (const char *err_msg) {
         Logger::Get(LogLevel_ERROR) << "Error in action Thread #" << THREAD_NUM << endl

@@ -3,10 +3,10 @@
 Chat::Chat(string text, int turn) : text_(text), turn_(turn) {
 }
 
-string Chat::getText() {
+string Chat::getText() const {
     return text_;
 }
 
-int Chat::getTurn() {
+int Chat::getTurn() const {
     return turn_;
 }
