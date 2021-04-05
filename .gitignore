@@ -4,7 +4,6 @@
 ./server/Log/*
 ./server/client
 ./AIC21-Client-Cpp/build/*
-./server/server-v1.2.4.jar
 
 *.zip 
 
