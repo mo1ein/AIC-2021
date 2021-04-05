@@ -12,11 +12,11 @@ public:
     Answer(Direction direction, string message, int messageValue);
     Answer(Direction direction);
     ~Answer() = default;
-    Direction getDirection();
+    Direction getDirection() const;
     void setDirection(Direction direction);
-    string getMessage();
+    string getMessage() const;
     void setMessage(string message);
-    int getMessageValue();
+    int getMessageValue() const;
     void setMessageValue(int messageValue);
 
 private:

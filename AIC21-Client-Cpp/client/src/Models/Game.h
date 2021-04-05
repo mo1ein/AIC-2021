@@ -10,6 +10,7 @@ class Ant;
 #include "Models/ChatBox.h"
 #include "Core/Message/Parse/GameConfigMessage.h"
 #include "Core/EventQueue.h"
+#include "Attack.h"
 
 class Game {
 
@@ -24,18 +25,24 @@ private:
     int health_kargar_;
     int health_sarbaaz_;
     int attack_distance_;
+    int view_distance_;
     int generate_kargar_;
     int generate_sarbaaz_;
     int rate_death_resource_;
     EventQueue &event_queue_;
+    vector<const Attack*> attacks;
+    void initGameConfig(GameConfigMessage *initMessage);
+    void setCurrentState(CurrentStateMessage *stateMessage);
+
+    friend class Controller;
 
 public:
     explicit Game(EventQueue &eventQueue);
     Game(const Game&);
     ~Game();
-    Ant* getAnt() const;
+    const Ant* getAnt() const;
     AntType getAntType() const;
-    ChatBox* getChatBox() const;
+    const ChatBox* getChatBox() const;
     int getMapWidth() const;
     int getMapHeight() const;
     int getBaseX() const;
@@ -43,11 +50,11 @@ public:
     int getHealthKargar() const;
     int getHealthSarbaaz() const;
     int getAttackDistance() const;
+    int getViewDistance() const;
     int getGenerateKargar() const;
     int getGenerateSarbaaz() const;
     int getRateDeathResource() const;
-    void initGameConfig(GameConfigMessage *initMessage);
-    void setCurrentState(CurrentStateMessage *stateMessage);
+    const vector<const Attack*>& getAttacks() const;
 };
 
 #endif //AIC21_CLIENT_CPP_GAME_H

@@ -12,7 +12,7 @@ class Map {
 
 public:
     Map(const vector<vector<Cell*>>& cells, int width, int height, int manhattanDistance, int currentX, int currentY);
-    Cell* getCell(int dx, int dy);
+    const Cell* getRelativeCell(int dx, int dy) const;
 
 private:
     vector<vector<Cell*>> cells_;   //Todo vector<vector*>* ?
@@ -21,7 +21,6 @@ private:
     int manhattan_distance_;
     int ant_x_;
     int ant_y_;
-
 };
 
 #endif //AIC21_CLIENT_CPP_MAP_H

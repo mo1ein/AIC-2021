@@ -9,10 +9,12 @@ Map::Map(const vector<vector<Cell*>>& cells, int width, int height, int manhatta
     ant_y_ = currentY;
 }
 
-Cell* Map::getCell(int dx, int dy) {
-    int x = ant_x_ + dx;
-    int y = ant_y_ + dy;
-    if (x >= width_ || x < 0 || y >= height_ || y < 0)
-        return nullptr;
+const Cell* Map::getRelativeCell(int dx, int dy) const {
+    int x = (ant_x_ + dx) % width_;
+    int y = (ant_y_ + dy) % height_;
+    if (x < 0)
+        x += width_;
+    if (y < 0)
+        y += height_;
     return cells_[x][y];
 }

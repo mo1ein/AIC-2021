@@ -10,7 +10,7 @@ Answer::Answer(Direction direction) {
     direction_ = direction;
 }
 
-Direction Answer::getDirection() {
+Direction Answer::getDirection() const {
     return direction_;
 }
 
@@ -18,7 +18,7 @@ void Answer::setDirection(Direction direction) {
     direction_ = direction;
 }
 
-string Answer::getMessage() {
+string Answer::getMessage() const {
     return message_;
 }
 
@@ -26,7 +26,7 @@ void Answer::setMessage(string message) {
     message_ = message;
 }
 
-int Answer::getMessageValue() {
+int Answer::getMessageValue() const {
     return message_value_;
 }
 

@@ -8,13 +8,12 @@ class Chat {
 
 public:
     Chat(string text, int turn);
-    string getText();
-    int getTurn();
+    string getText() const;
+    int getTurn() const;
 
 private:
     const string text_;
     int turn_;
-
 };
 
 #endif //AIC21_CLIENT_CPP_CHAT_H

@@ -23,23 +23,23 @@ Cell::~Cell() {
     }
 }
 
-int Cell::getX() {
+int Cell::getX() const {
     return x_;
 }
 
-int Cell::getY() {
+int Cell::getY() const {
     return y_;
 }
 
-CellType Cell::getType() {
+CellType Cell::getType() const {
     return type_;
 }
 
-Resource* Cell::getResource() {
+const Resource* Cell::getResource() const {
     return resource_;
 }
 
-vector<const Ant*> Cell::getPresentAnts() {
+const vector<const Ant*>& Cell::getPresentAnts() const {
     return present_ants_;
 }
 

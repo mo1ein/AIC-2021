@@ -5,16 +5,15 @@
 using namespace std;
 
 Answer *AI::turn(Game *game) {
-    Ant* me = game->getAnt();
-    cout << me->getHealth() << " " << me->getTeam() << endl;
+    const Ant* me = game->getAnt();
 
     int viewDist = me->getViewDistance();
     int targetX = -1, targetY = -1;
     if (me->getType() == KARGAR) {
         for (int i = 0; i < viewDist; i++) {
             for (int j = 0; j < viewDist; j++) {
-                Cell* cell = game->getAnt()->getNeighborCell(i, j);
-                if (cell->getResource()->getType() != NONE) {
+                const Cell* cell = game->getAnt()->getNeighborCell(i, j);
+                if (cell && cell->getResource()->getType() != NONE) {
                     targetX = cell->getX();
                     targetY = cell->getY();
                     break;
