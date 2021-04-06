@@ -64,20 +64,26 @@ pair<int, int> getResourcePoints(const Ant* me)
 
 pair<int, int> AI::getFarPoints(const Ant* me)
 {
-
-    int myView = me -> getViewDistance();
-    vector<int>valid;
-
     // set system time for seed
     srand((int)time(0));
+    vector<int>valid;
 
-    // TODO: can use this func for also KARGARs
+
+    int myView = me -> getViewDistance();
 
     // far viewDistance points
     const Cell* cell_1 = me -> getNeighborCell(0, myView);
     const Cell* cell_2 = me -> getNeighborCell(0, -myView);
     const Cell* cell_3 = me -> getNeighborCell(-myView, 0);
     const Cell* cell_4 = me -> getNeighborCell(myView, 0);
+
+    if (me -> getType() == KARGAR) {
+        myView = 1;
+        cell_1 = me -> getNeighborCell(0, myView);
+        cell_2 = me -> getNeighborCell(0, -myView);
+        cell_3 = me -> getNeighborCell(-myView, 0);
+        cell_4 = me -> getNeighborCell(myView, 0);
+    }
 
     if (cell_1 != nullptr && cell_1 -> getType() != WALL && savedMap[cell_1 -> getX()][cell_1 -> getY()] != -1)
         valid.push_back(1);
@@ -105,22 +111,6 @@ pair<int, int> AI::getFarPoints(const Ant* me)
     return {cell_4 -> getX(), cell_4 -> getY()};
 
     // TODO: check when see enemy
-}
-
-
-pair<int, int> getRandomPoints(const Ant* me)
-{
-    // TODO: use better random way
-    const Cell* cell = me->getNeighborCell(0, -1);
-    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
-
-    cell = me->getNeighborCell(-1, 0);
-    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
-
-    cell = me->getNeighborCell(1, 0);
-    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
-
-    cell = me->getNeighborCell(0, 1); return {cell->getX(), cell->getY()};
 }
 
 
@@ -283,7 +273,7 @@ Answer* AI::turn(Game* game)
 
     // If didn't found any resource, going to some random points
     if (me -> getType() == KARGAR && nextGoingPoints.first == -1) {
-        nextGoingPoints = getRandomPoints(me);
+        nextGoingPoints = getFarPoints(me);
         currentStatus = "Kargar: Going to some random direction";
     }
 
