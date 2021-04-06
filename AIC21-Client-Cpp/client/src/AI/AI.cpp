@@ -61,26 +61,30 @@ pair<int, int> getResourcePoints(const Ant* me)
 }
 
 
-pair<int, int> getFarPoints(const Ant* me)
+pair<int, int> AI::getFarPoints(const Ant* me)
 {
-    // far viewDistance points
-    // TODO: use loop for points
-    const Cell* cell_1 = me -> getNeighborCell(2, 2);
-    const Cell* cell_2 = me -> getNeighborCell(-2, -2);
-    const Cell* cell_3 = me -> getNeighborCell(-2, 2);
-    const Cell* cell_4 = me -> getNeighborCell(2, -2);
 
+    // why cant use savedMap??
+    int myView = me -> getViewDistance();
+
+    // far viewDistance points
+    const Cell* cell_1 = me -> getNeighborCell(0, myView);
+    const Cell* cell_2 = me -> getNeighborCell(0, -myView);
+    const Cell* cell_3 = me -> getNeighborCell(-myView, 0);
+    const Cell* cell_4 = me -> getNeighborCell(myView, 0);
+
+    // TODO: use last state for random going or...
     // every point have same distance so go randomly!
-    if (cell_1 != nullptr && cell_1 -> getType() != WALL)
+    if (cell_1 != nullptr && cell_1 -> getType() != WALL && savedMap[cell_1 -> getX()][cell_1 -> getY()] != -1)
         return {cell_1 -> getX(), cell_1 -> getY()};
 
-    if (cell_2 != nullptr && cell_2 -> getType() != WALL)
+    if (cell_2 != nullptr && cell_2 -> getType() != WALL && savedMap[cell_2 -> getX()][cell_2 -> getY()] != -1)
         return {cell_2 -> getX(), cell_2 -> getY()};
 
-    if (cell_3 != nullptr && cell_3 -> getType() != WALL)
+    if (cell_3 != nullptr && cell_3 -> getType() != WALL && savedMap[cell_3 -> getX()][cell_3 -> getY()] != -1)
         return {cell_3 -> getX(), cell_3 -> getY()};
 
-    if (cell_4 != nullptr && cell_4 -> getType() != WALL)
+    if (cell_4 != nullptr && cell_4 -> getType() != WALL && savedMap[cell_4 -> getX()][cell_4 -> getY()] != -1)
         return {cell_4 -> getX(), cell_4 -> getY()};
 
     // TODO: check when see enemy
@@ -130,7 +134,6 @@ Direction AI::getDirection(const Ant* me)
     // TODO: If code reaches here, something bad has happened and should think about it!!!
     cout << "fuck fuck fuck";
     return UP;
-    }
 }
 
 
