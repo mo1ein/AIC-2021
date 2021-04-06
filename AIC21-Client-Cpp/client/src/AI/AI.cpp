@@ -1,8 +1,9 @@
 #include "AI.h"
 #include <iostream>
 #include "Models/enums.h"
-#include <queue>
 #include <unordered_map>
+#include <queue>
+#include<time.h>
 
 using namespace std;
 
@@ -61,45 +62,55 @@ pair<int, int> getResourcePoints(const Ant* me)
 }
 
 
-pair<int, int> getFarPoints(const Ant* me)
+pair<int, int> AI::getFarPoints(const Ant* me)
 {
-    // far viewDistance points
-    // TODO: use loop for points
-    const Cell* cell_1 = me -> getNeighborCell(2, 2);
-    const Cell* cell_2 = me -> getNeighborCell(-2, -2);
-    const Cell* cell_3 = me -> getNeighborCell(-2, 2);
-    const Cell* cell_4 = me -> getNeighborCell(2, -2);
+    // set system time for seed
+    srand((int)time(0));
+    vector<int>valid;
 
-    // every point have same distance so go randomly!
-    if (cell_1 != nullptr && cell_1 -> getType() != WALL)
+
+    int myView = me -> getViewDistance();
+
+    // far viewDistance points
+    const Cell* cell_1 = me -> getNeighborCell(0, myView);
+    const Cell* cell_2 = me -> getNeighborCell(0, -myView);
+    const Cell* cell_3 = me -> getNeighborCell(-myView, 0);
+    const Cell* cell_4 = me -> getNeighborCell(myView, 0);
+
+    if (me -> getType() == KARGAR) {
+        myView = 1;
+        cell_1 = me -> getNeighborCell(0, myView);
+        cell_2 = me -> getNeighborCell(0, -myView);
+        cell_3 = me -> getNeighborCell(-myView, 0);
+        cell_4 = me -> getNeighborCell(myView, 0);
+    }
+
+    if (cell_1 != nullptr && cell_1 -> getType() != WALL && savedMap[cell_1 -> getX()][cell_1 -> getY()] != -1)
+        valid.push_back(1);
+
+    if (cell_2 != nullptr && cell_2 -> getType() != WALL && savedMap[cell_2 -> getX()][cell_2 -> getY()] != -1)
+        valid.push_back(2);
+
+    if (cell_3 != nullptr && cell_3 -> getType() != WALL && savedMap[cell_3 -> getX()][cell_3 -> getY()] != -1)
+        valid.push_back(3);
+
+    if (cell_4 != nullptr && cell_4 -> getType() != WALL && savedMap[cell_4 -> getX()][cell_4 -> getY()] != -1)
+        valid.push_back(4);
+
+    int choice = rand() % valid.size();
+
+    if (valid[choice] == 1)
         return {cell_1 -> getX(), cell_1 -> getY()};
 
-    if (cell_2 != nullptr && cell_2 -> getType() != WALL)
+    if (valid[choice] == 2)
         return {cell_2 -> getX(), cell_2 -> getY()};
 
-    if (cell_3 != nullptr && cell_3 -> getType() != WALL)
+    if (valid[choice] == 3)
         return {cell_3 -> getX(), cell_3 -> getY()};
 
-    if (cell_4 != nullptr && cell_4 -> getType() != WALL)
-        return {cell_4 -> getX(), cell_4 -> getY()};
+    return {cell_4 -> getX(), cell_4 -> getY()};
 
     // TODO: check when see enemy
-}
-
-
-pair<int, int> getRandomPoints(const Ant* me)
-{
-    // TODO: use better random way
-    const Cell* cell = me->getNeighborCell(0, -1);
-    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
-
-    cell = me->getNeighborCell(-1, 0);
-    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
-
-    cell = me->getNeighborCell(1, 0);
-    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
-
-    cell = me->getNeighborCell(0, 1); return {cell->getX(), cell->getY()};
 }
 
 
@@ -130,7 +141,6 @@ Direction AI::getDirection(const Ant* me)
     // TODO: If code reaches here, something bad has happened and should think about it!!!
     cout << "fuck fuck fuck";
     return UP;
-    }
 }
 
 
@@ -263,7 +273,7 @@ Answer* AI::turn(Game* game)
 
     // If didn't found any resource, going to some random points
     if (me -> getType() == KARGAR && nextGoingPoints.first == -1) {
-        nextGoingPoints = getRandomPoints(me);
+        nextGoingPoints = getFarPoints(me);
         currentStatus = "Kargar: Going to some random direction";
     }
 

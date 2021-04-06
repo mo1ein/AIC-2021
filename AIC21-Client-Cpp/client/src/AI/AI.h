@@ -11,6 +11,7 @@ public:
     void saveMap(const Ant* me);
     vector<pair<int, int>> findPath(const Ant* me, pair<int, int> dest);
     Direction getDirection(const Ant* me);
+    pair<int, int> getFarPoints(const Ant* me);
 
     vector<vector<int>> savedMap;
     int currentTurn=0;
