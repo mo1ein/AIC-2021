@@ -64,6 +64,7 @@ pair<int, int> getResourcePoints(const Ant* me)
 pair<int, int> getFarPoints(const Ant* me)
 {
     // far viewDistance points
+    // TODO: use loop for points
     const Cell* cell_1 = me -> getNeighborCell(2, 2);
     const Cell* cell_2 = me -> getNeighborCell(-2, -2);
     const Cell* cell_3 = me -> getNeighborCell(-2, 2);
@@ -88,6 +89,7 @@ pair<int, int> getFarPoints(const Ant* me)
 
 pair<int, int> getRandomPoints(const Ant* me)
 {
+    // TODO: use better random way
     const Cell* cell = me->getNeighborCell(0, -1);
     if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
 
@@ -107,7 +109,7 @@ Direction AI::getDirection(const Ant* me)
     int x = me->getX();
     int y = me->getY();
 
-    if (me -> getType() == KARGAR && goingPath.size() != 0)
+    if (goingPath.size() != 0)
     {
         pair<int, int> latestPath = goingPath.back();
         goingPath.pop_back();
@@ -125,28 +127,9 @@ Direction AI::getDirection(const Ant* me)
             return RIGHT;
     }
 
-    if (me -> getType() == KARGAR && goingPath.size() == 0){
-        // TODO: If code reaches here, something bad has happened and should think about it!!!
-        cout << "fuck fuck fuck";
-        return UP;
-    }
-
-    if (me -> getType() == SARBAZ && goingPathSarbaz.size() != 0)
-    {
-        pair<int, int> latestPath = goingPathSarbaz.back();
-        goingPathSarbaz.pop_back();
-
-        if (latestPath.second < y)
-            return UP;
-
-        if (latestPath.second > y)
-            return DOWN;
-
-        if (latestPath.first < x)
-            return LEFT;
-
-        if (latestPath.first > x)
-            return RIGHT;
+    // TODO: If code reaches here, something bad has happened and should think about it!!!
+    cout << "fuck fuck fuck";
+    return UP;
     }
 }
 
@@ -272,7 +255,7 @@ Answer* AI::turn(Game* game)
     }
     else
     {
-        if (goingPathSarbaz.size() == 0) {
+        if (goingPath.size() == 0) {
             nextGoingPoints = getFarPoints(me);
             currentStatus = "Sarbaz: Found a way";
         }
@@ -284,11 +267,9 @@ Answer* AI::turn(Game* game)
         currentStatus = "Kargar: Going to some random direction";
     }
 
-    if (me -> getType() == KARGAR && goingPath.size() == 0)
+    if (goingPath.size() == 0)
         goingPath = findPath(me, nextGoingPoints);
 
-    else if (me -> getType() == SARBAZ && goingPathSarbaz.size() == 0)
-        goingPathSarbaz = findPath(me, nextGoingPoints);
 
     ++currentTurn;
     Direction direction = getDirection(me);
