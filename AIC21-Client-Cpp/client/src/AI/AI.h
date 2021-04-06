@@ -15,8 +15,6 @@ public:
     vector<vector<int>> savedMap;
     int currentTurn=0;
     vector<pair<int, int>> goingPath;
-
 };
 
 #endif // AIC21_CLIENT_CPP_AI_H
-

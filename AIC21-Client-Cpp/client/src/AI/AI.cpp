@@ -6,16 +6,17 @@
 
 using namespace std;
 
-pair<int, int> getResourcePoints(const Ant* me) {
+pair<int, int> getResourcePoints(const Ant* me)
+{
     const Cell* cell = me->getNeighborCell(0, -1);
     if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
-  
+
     cell = me->getNeighborCell(-1, 0);
     if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
-  
+
     cell = me->getNeighborCell(1, 0);
     if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
-  
+
     cell = me->getNeighborCell(0, 1);
     if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
 
@@ -37,7 +38,7 @@ pair<int, int> getResourcePoints(const Ant* me) {
                 break;
             }
         }
-        
+
         // Check up and down rows
         for (int i=farthest; i <= -1*farthest && targetX == -1; ++i) {
             cell = me->getNeighborCell(i, farthest);
@@ -60,46 +61,76 @@ pair<int, int> getResourcePoints(const Ant* me) {
 }
 
 
-pair<int, int> getRandomPoints(const Ant* me) {
-    const Cell* cell = me->getNeighborCell(0, -1);
-    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
-  
-    cell = me->getNeighborCell(-1, 0);
-    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
-  
-    cell = me->getNeighborCell(1, 0);
-    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
-  
-    cell = me->getNeighborCell(0, 1);
-    return {cell->getX(), cell->getY()};
+pair<int, int> getFarPoints(const Ant* me)
+{
+    // far viewDistance points
+    // TODO: use loop for points
+    const Cell* cell_1 = me -> getNeighborCell(2, 2);
+    const Cell* cell_2 = me -> getNeighborCell(-2, -2);
+    const Cell* cell_3 = me -> getNeighborCell(-2, 2);
+    const Cell* cell_4 = me -> getNeighborCell(2, -2);
+
+    // every point have same distance so go randomly!
+    if (cell_1 != nullptr && cell_1 -> getType() != WALL)
+        return {cell_1 -> getX(), cell_1 -> getY()};
+
+    if (cell_2 != nullptr && cell_2 -> getType() != WALL)
+        return {cell_2 -> getX(), cell_2 -> getY()};
+
+    if (cell_3 != nullptr && cell_3 -> getType() != WALL)
+        return {cell_3 -> getX(), cell_3 -> getY()};
+
+    if (cell_4 != nullptr && cell_4 -> getType() != WALL)
+        return {cell_4 -> getX(), cell_4 -> getY()};
+
+    // TODO: check when see enemy
 }
 
+
+pair<int, int> getRandomPoints(const Ant* me)
+{
+    // TODO: use better random way
+    const Cell* cell = me->getNeighborCell(0, -1);
+    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
+
+    cell = me->getNeighborCell(-1, 0);
+    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
+
+    cell = me->getNeighborCell(1, 0);
+    if (cell != nullptr && cell->getType() != WALL) return {cell->getX(), cell->getY()};
+
+    cell = me->getNeighborCell(0, 1); return {cell->getX(), cell->getY()};
+}
+
+
 // Create a Direction object based on current position and next points
-Direction AI::getDirection(const Ant* me) {
+Direction AI::getDirection(const Ant* me)
+{
     int x = me->getX();
     int y = me->getY();
-    
+
     if (goingPath.size() != 0)
     {
         pair<int, int> latestPath = goingPath.back();
         goingPath.pop_back();
-        if (latestPath.second < y) {
+
+        if (latestPath.second < y)
             return UP;
-        }
-        else if (latestPath.second > y) {
+
+        if (latestPath.second > y)
             return DOWN;
-        }
-        else if (latestPath.first < x) {
+
+        if (latestPath.first < x)
             return LEFT;
-        }
-        else if (latestPath.first > x) {
+
+        if (latestPath.first > x)
             return RIGHT;
-        }
     }
 
     // TODO: If code reaches here, something bad has happened and should think about it!!!
     cout << "fuck fuck fuck";
     return UP;
+    }
 }
 
 
@@ -123,9 +154,10 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
     queue<pair<int, int>> neighbors;
     vector<pair<int, int>> path;
     unordered_map<pair<int, int>, pair<int, int>, hash_pair> visited;
-    
+
     neighbors.push(start_node);
 
+    //TODO: if cant go in dest. cant find path because cant see map enough!
     while (neighbors.size() > 0) {
         node = neighbors.front();
         neighbors.pop();
@@ -141,7 +173,7 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
 
         for (pair<int, int> direction : directions) {
             pair<int, int> neighbour{node.first+direction.first, node.second+direction.second};
-            
+
             if (neighbour.first < 0 || neighbour.second < 0 ||
                 neighbour.first > savedMap.size() ||
                 neighbour.second > savedMap[0].size() ||
@@ -161,12 +193,11 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
 }
 
 
-
-
 void AI::saveMap(const Ant* me) {
     int viewDistance=me->getViewDistance();
     const Cell* cell;
-    
+
+    // TODO: fix viewDistance
     // TODO: should not start from -1*viewDistance and go to viewDistance
     for (int i=-1*viewDistance; i <= viewDistance; ++i)
         for (int j=-1*viewDistance; j <= viewDistance; ++j) {
@@ -182,6 +213,7 @@ void AI::saveMap(const Ant* me) {
         }
 }
 
+
 Answer* AI::turn(Game* game)
 {
     // Initialize all matrix elements to -1 at beginning of the game
@@ -189,49 +221,55 @@ Answer* AI::turn(Game* game)
     {
         int width=game->getMapWidth();
         int height=game->getMapHeight();
+
         savedMap.resize(width);
-      
+
         for (int i=0; i < width; ++i)
             savedMap[i].resize(height);
-        
+
         for (int i=0; i < width; ++i)
             for (int j=0; j < height; ++j)
-                savedMap[i][j] = -1; 
+                savedMap[i][j] = -1;
     }
 
     const Ant* me = game->getAnt();
     pair<int, int> nextGoingPoints{-1, -1}; // (x, y)
     string currentStatus="Going to saved path!";
 
-    saveMap(me);    
+    saveMap(me);
 
     // Decide what to do if the ant is Kargar or Sarbaz
-    if (me->getType() == AntType::KARGAR) {
+    if (me->getType() == AntType::KARGAR)
+    {
         if (goingPath.size() == 0) {
             if (me->getCurrentResource()->getType() == ResourceType::NONE) {
                 nextGoingPoints = getResourcePoints(me);
-                currentStatus = "Found a resource";
+                currentStatus = "Kargar: Found a resource";
             }
             else {
                 nextGoingPoints.first = game->getBaseX();
                 nextGoingPoints.second = game->getBaseY();
-                currentStatus = "Returning to base";
+                currentStatus = "Kargar: Returning to base";
             }
         }
     }
-    else {
-        // TODO: Decide what to do with Sarbaz
+    else
+    {
+        if (goingPath.size() == 0) {
+            nextGoingPoints = getFarPoints(me);
+            currentStatus = "Sarbaz: Found a way";
+        }
     }
 
     // If didn't found any resource, going to some random points
-    if (nextGoingPoints.first == -1) {
+    if (me -> getType() == KARGAR && nextGoingPoints.first == -1) {
         nextGoingPoints = getRandomPoints(me);
-        currentStatus = "Going to some random direction";
+        currentStatus = "Kargar: Going to some random direction";
     }
-  
-    if (goingPath.size() == 0) {
+
+    if (goingPath.size() == 0)
         goingPath = findPath(me, nextGoingPoints);
-    }
+
 
     ++currentTurn;
     Direction direction = getDirection(me);
