@@ -1,8 +1,9 @@
 #include "AI.h"
 #include <iostream>
 #include "Models/enums.h"
-#include <queue>
 #include <unordered_map>
+#include <queue>
+#include<time.h>
 
 using namespace std;
 
@@ -64,8 +65,13 @@ pair<int, int> getResourcePoints(const Ant* me)
 pair<int, int> AI::getFarPoints(const Ant* me)
 {
 
-    // why cant use savedMap??
     int myView = me -> getViewDistance();
+    vector<int>valid;
+
+    // set system time for seed
+    srand((int)time(0));
+
+    // TODO: can use this func for also KARGARs
 
     // far viewDistance points
     const Cell* cell_1 = me -> getNeighborCell(0, myView);
@@ -73,19 +79,30 @@ pair<int, int> AI::getFarPoints(const Ant* me)
     const Cell* cell_3 = me -> getNeighborCell(-myView, 0);
     const Cell* cell_4 = me -> getNeighborCell(myView, 0);
 
-    // TODO: use last state for random going or...
-    // every point have same distance so go randomly!
     if (cell_1 != nullptr && cell_1 -> getType() != WALL && savedMap[cell_1 -> getX()][cell_1 -> getY()] != -1)
-        return {cell_1 -> getX(), cell_1 -> getY()};
+        valid.push_back(1);
 
     if (cell_2 != nullptr && cell_2 -> getType() != WALL && savedMap[cell_2 -> getX()][cell_2 -> getY()] != -1)
-        return {cell_2 -> getX(), cell_2 -> getY()};
+        valid.push_back(2);
 
     if (cell_3 != nullptr && cell_3 -> getType() != WALL && savedMap[cell_3 -> getX()][cell_3 -> getY()] != -1)
-        return {cell_3 -> getX(), cell_3 -> getY()};
+        valid.push_back(3);
 
     if (cell_4 != nullptr && cell_4 -> getType() != WALL && savedMap[cell_4 -> getX()][cell_4 -> getY()] != -1)
-        return {cell_4 -> getX(), cell_4 -> getY()};
+        valid.push_back(4);
+
+    int choice = rand() % valid.size();
+
+    if (valid[choice] == 1)
+        return {cell_1 -> getX(), cell_1 -> getY()};
+
+    if (valid[choice] == 2)
+        return {cell_2 -> getX(), cell_2 -> getY()};
+
+    if (valid[choice] == 3)
+        return {cell_3 -> getX(), cell_3 -> getY()};
+
+    return {cell_4 -> getX(), cell_4 -> getY()};
 
     // TODO: check when see enemy
 }
