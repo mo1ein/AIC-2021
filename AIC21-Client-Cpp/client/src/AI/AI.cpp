@@ -7,66 +7,75 @@
 
 using namespace std;
 
-pair<int, int> getResourcePoints(const Ant* me)
-{
-    const Cell* cell = me->getNeighborCell(0, -1);
-    if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
+vector<pair<int, int>> directions{{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
-    cell = me->getNeighborCell(-1, 0);
-    if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
-
-    cell = me->getNeighborCell(1, 0);
-    if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
-
-    cell = me->getNeighborCell(0, 1);
-    if (cell != nullptr && cell->getResource()->getType() != NONE) return {cell->getX(), cell->getY()};
-
-    int targetX=-1, targetY=-1, farthest=-1;
-
-    while (-1*farthest <= me->getViewDistance() && targetX == -1) {
-        // Check left and right columns
-        for (int j=farthest+1; j < -1*farthest && farthest != -1; ++j) {
-            cell = me->getNeighborCell(farthest, j);
-            if (cell != nullptr && cell->getResource()->getType() != ResourceType::NONE) {
-                targetX = cell->getX();
-                targetY = cell->getY();
-                break;
-            }
-            cell = me->getNeighborCell(-1*farthest, j);
-            if (cell != nullptr && cell->getResource()->getType() != ResourceType::NONE) {
-                targetX = cell->getX();
-                targetY = cell->getY();
-                break;
-            }
-        }
-
-        // Check up and down rows
-        for (int i=farthest; i <= -1*farthest && targetX == -1; ++i) {
-            cell = me->getNeighborCell(i, farthest);
-            if (cell != nullptr && cell->getResource()->getType() != ResourceType::NONE) {
-                targetX = cell->getX();
-                targetY = cell->getY();
-                break;
-            }
-            cell = me->getNeighborCell(i, -1*farthest);
-            if (cell != nullptr && cell->getResource()->getType() != ResourceType::NONE) {
-                targetX = cell->getX();
-                targetY = cell->getY();
-                break;
-            }
-        }
-        --farthest;
+// For creating map with pair type keys
+struct hash_pair {
+    size_t operator()(const pair<int, int>& p) const
+    {
+        auto hash1 = hash<int>{}(p.first);
+        auto hash2 = hash<int>{}(p.second);
+        return hash1 ^ hash2;
     }
+};
 
-    return {targetX, targetY};
+vector<pair<int, int>> AI::getResourcePath(const Ant* me)
+{
+    // TODO: Maybe should check for view distance
+    pair<int, int> node;
+    pair<int, int> start_node{me->getX(), me->getY()};
+    queue<pair<int, int>> neighbors;
+    vector<pair<int, int>> path;
+    unordered_map<pair<int, int>, pair<int, int>, hash_pair> visited;
+    const Cell* cell;
+
+    neighbors.push(start_node);
+    while (neighbors.size() > 0) {
+        node = neighbors.front();
+        neighbors.pop();
+        cell = me->getNeighborCell(node.first-start_node.first,
+                                   node.second-start_node.second);
+        if (cell != nullptr && cell->getResource()->getType() != ResourceType::NONE)
+        {
+            if (me->getCurrentResource()->getType() == ResourceType::NONE ||
+                me->getCurrentResource()->getType() == cell->getResource()->getType())
+            {
+                while (node != start_node) {
+                    path.push_back(node);
+                    node = visited[node];
+                }
+                // Return the path to destination in reversed format
+                return path;
+            }
+        }
+        
+        for (pair<int, int> direction : directions) {
+            pair<int, int> neighbour{node.first+direction.first, node.second+direction.second};
+            
+            if (neighbour.first < 0 || neighbour.second < 0 ||
+                neighbour.first > savedMap.size() ||
+                neighbour.second > savedMap[0].size() ||
+                savedMap[neighbour.first][neighbour.second] == -1 ||
+                savedMap[neighbour.first][neighbour.second] == 0)
+            {
+                continue;
+            }
+            if (visited.find(neighbour) != visited.end()) {
+                continue;
+            }
+            visited[neighbour] = node;
+            neighbors.push(neighbour);
+        }
+
+    }
+    return path;
 }
-
 
 pair<int, int> AI::getFarPoints(const Ant* me)
 {
     // set system time for seed
     srand((int)time(0));
-    vector<int>valid;
+    vector<int> valid;
 
 
     int myView = me -> getViewDistance();
@@ -142,20 +151,6 @@ Direction AI::getDirection(const Ant* me)
     cout << "fuck fuck fuck";
     return UP;
 }
-
-
-// The whole part of finding shortest path
-vector<pair<int, int>> directions{{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
-
-// https://www.geeksforgeeks.org/how-to-create-an-unordered_map-of-pairs-in-c
-struct hash_pair {
-    size_t operator()(const pair<int, int>& p) const
-    {
-        auto hash1 = hash<int>{}(p.first);
-        auto hash2 = hash<int>{}(p.second);
-        return hash1 ^ hash2;
-    }
-};
 
 vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
 {
@@ -252,8 +247,9 @@ Answer* AI::turn(Game* game)
     if (me->getType() == AntType::KARGAR)
     {
         if (goingPath.size() == 0) {
-            if (me->getCurrentResource()->getType() == ResourceType::NONE) {
-                nextGoingPoints = getResourcePoints(me);
+            if (me->getCurrentResource()->getType() == ResourceType::NONE ||
+                me->getCurrentResource()->getValue() < 10) {
+                goingPath = getResourcePath(me);
                 currentStatus = "Kargar: Found a resource";
             }
             else {
@@ -272,7 +268,7 @@ Answer* AI::turn(Game* game)
     }
 
     // If didn't found any resource, going to some random points
-    if (me -> getType() == KARGAR && nextGoingPoints.first == -1) {
+    if (me -> getType() == KARGAR && goingPath.size() == 0 && nextGoingPoints.first == -1) {
         nextGoingPoints = getFarPoints(me);
         currentStatus = "Kargar: Going to some random direction";
     }
