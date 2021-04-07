@@ -12,6 +12,7 @@ public:
     vector<pair<int, int>> findPath(const Ant* me, pair<int, int> dest);
     Direction getDirection(const Ant* me);
     pair<int, int> getFarPoints(const Ant* me);
+    vector<pair<int, int>> getResourcePath(const Ant* me);
 
     vector<vector<int>> savedMap;
     int currentTurn=0;
