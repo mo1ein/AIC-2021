@@ -34,7 +34,8 @@ vector<pair<int, int>> AI::getResourcePath(const Ant* me)
         node = neighbors.front();
         neighbors.pop();
 
-        if (savedMap[node.first][node.second] == 2)
+        if (savedMap[node.first][node.second] == 2 ||
+            savedMap[node.first][node.second] == 3 )
         {
             while (node != start_node) {
                 path.push_back(node);
@@ -66,55 +67,16 @@ vector<pair<int, int>> AI::getResourcePath(const Ant* me)
     return path;
 }
 
-pair<int, int> AI::getFarPoints(const Ant* me)
+pair<int, int> AI::getRandomFarPoint(const Ant* me, int width, int height)
 {
-    // set system time for seed
-    srand((int)time(0));
-    vector<int> valid;
-
-
-    int myView = me -> getViewDistance();
-
-    // far viewDistance points
-    const Cell* cell_1 = me -> getNeighborCell(0, myView);
-    const Cell* cell_2 = me -> getNeighborCell(0, -myView);
-    const Cell* cell_3 = me -> getNeighborCell(-myView, 0);
-    const Cell* cell_4 = me -> getNeighborCell(myView, 0);
-
-    if (me -> getType() == KARGAR) {
-        myView = 1;
-        cell_1 = me -> getNeighborCell(0, myView);
-        cell_2 = me -> getNeighborCell(0, -myView);
-        cell_3 = me -> getNeighborCell(-myView, 0);
-        cell_4 = me -> getNeighborCell(myView, 0);
-    }
-
-    if (cell_1 != nullptr && cell_1 -> getType() != WALL && savedMap[cell_1 -> getX()][cell_1 -> getY()] != -1)
-        valid.push_back(1);
-
-    if (cell_2 != nullptr && cell_2 -> getType() != WALL && savedMap[cell_2 -> getX()][cell_2 -> getY()] != -1)
-        valid.push_back(2);
-
-    if (cell_3 != nullptr && cell_3 -> getType() != WALL && savedMap[cell_3 -> getX()][cell_3 -> getY()] != -1)
-        valid.push_back(3);
-
-    if (cell_4 != nullptr && cell_4 -> getType() != WALL && savedMap[cell_4 -> getX()][cell_4 -> getY()] != -1)
-        valid.push_back(4);
-
-    int choice = rand() % valid.size();
-
-    if (valid[choice] == 1)
-        return {cell_1 -> getX(), cell_1 -> getY()};
-
-    if (valid[choice] == 2)
-        return {cell_2 -> getX(), cell_2 -> getY()};
-
-    if (valid[choice] == 3)
-        return {cell_3 -> getX(), cell_3 -> getY()};
-
-    return {cell_4 -> getX(), cell_4 -> getY()};
-
-    // TODO: check when see enemy
+    // TODO: Think about if this random is valid!
+    // TODO: Remove enemies base point from random points
+    int randDir = (rand()%200 + me->getX() + me->getY() + currentTurn) % 5;
+    if (randDir == 0) return {width/2, height/2};
+    if (randDir == 1) return {width, 1};
+    if (randDir == 2) return {1, height};
+    if (randDir == 3) return {width, height};
+    if (randDir == 4) return {1, 1};
 }
 
 
@@ -224,7 +186,7 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
 }
 
 
-void AI::saveMap(const Ant* me) {
+/*void AI::saveMap(const Ant* me) {
     int viewDistance=me->getViewDistance();
     const Cell* cell;
 
@@ -245,6 +207,48 @@ void AI::saveMap(const Ant* me) {
                 }
             }
         }
+} */
+void AI::saveMap(const Ant* me)
+{
+int viewDistance = me->getViewDistance();
+    bool goadd = true;
+    int row = 0;
+    int col = -1*viewDistance;
+    
+    for (int i = -1*row; i <= row; i++)
+    {
+        const Cell* cell = me->getNeighborCell(i, col);
+        if (cell->getType() == WALL)
+            savedMap[cell->getX()][cell->getY()] = 0;
+
+        else if (cell -> getResource() -> getType() == BREAD)
+            savedMap[cell->getX()][cell->getY()] = 2;
+
+        else if (cell -> getResource() -> getType() == GRASS)
+            savedMap[cell->getX()][cell->getY()] = 3;
+
+        else
+            savedMap[cell->getX()][cell->getY()] = 1;
+            
+        if (col == viewDistance)
+            break;
+        else if (i == row)
+        {
+            if (row == viewDistance) {
+                goadd = false;
+            }
+            if (goadd) {
+                row++;
+                col++;
+                i = -1*row - 1;
+            }
+            else {
+                row--;
+                col++;
+                i = -1*row - 1;
+            }
+        }
+    }
 }
 
 int getManhattan(pair<int, int> a, pair<int, int> b) {
@@ -359,26 +363,40 @@ Answer* AI::turn(Game* game)
             for (int j=0; j < height; ++j)
                 savedMap[i][j] = -1;
 
-        cout << game->getAntType() << "\n";
-        cout << "Starting" << game->getAnt()->getX() << "," << game->getAnt()->getY() << "\n";
+        //cout << game->getAntType() << "\n";
+        //cout << "Starting" << game->getAnt()->getX() << "," << game->getAnt()->getY() << "\n";
     }
 
 
     saveMap(me);
 
+    // Going to random direction in first turn
+    if (currentTurn == 0 && me->getType() == KARGAR) {
+        int randDir=rand()%4;
+        Direction direction;
+        // cout << "Random number" << rand() << " " << randDir << "\n";
+        if (randDir == 0) direction = UP;
+        if (randDir == 1) direction = RIGHT;
+        if (randDir == 2) direction = LEFT;
+        if (randDir == 3) direction = DOWN;
+        ++currentTurn;
+        return new Answer(direction);
+    }
+
     // Decide what to do if the ant is Kargar or Sarbaz
     if (me->getType() == AntType::KARGAR)
     {
         if (goingPath.size() == 0) {
-            if (me->getCurrentResource()->getType() == ResourceType::NONE ||
-                me->getCurrentResource()->getValue() < 10) {
-                goingPath = getResourcePath(me);
-                currentStatus = "Kargar: Found a resource";
-            }
-            else {
+            if (me->getCurrentResource()->getType() != ResourceType::NONE) {
+                // Return Kargar to Base
                 nextGoingPoints.first = game->getBaseX();
                 nextGoingPoints.second = game->getBaseY();
                 currentStatus = "Kargar: Returning to base";
+            }
+            else {
+                // Search for food
+                goingPath = getResourcePath(me);
+                currentStatus = "Kargar: Found a resource";
             }
         }
     }
@@ -389,35 +407,42 @@ Answer* AI::turn(Game* game)
                 farthestPoint = {-1, -1};
             
             if (farthestPoint.first == -1)
-                farthestPoint = findFarthestPointOnMap(me, game->getMapWidth(), game->getMapHeight());
+                farthestPoint = getRandomFarPoint(me, game->getMapWidth(), game->getMapHeight());
 
-            cout << "Farthest:" << farthestPoint.first << "," << farthestPoint.second << "\n";
-            pair<int ,int > a = getFarthestInVD(me, farthestPoint);
-            cout << "IN VD:" << a.first << "," << a.second << "\n";
-            /*nextGoingPoints = getFarthestInVD(me, farthestPoint);
-            cout << "G:" << nextGoingPoints.first << "," << nextGoingPoints.second << "\n";*/
-            nextGoingPoints = a;
+            //cout << "Farthest:" << farthestPoint.first << "," << farthestPoint.second << "\n";
+            nextGoingPoints = getFarthestInVD(me, farthestPoint);
+            //cout << "IN VD:" << nextGoingPoints.first << "," << nextGoingPoints.second << "\n";
         }
     }
 
     // If didn't found any resource, going to some random points
     if (me -> getType() == KARGAR && goingPath.size() == 0 && nextGoingPoints.first == -1) {
-        nextGoingPoints = getFarPoints(me);
+        //cout << "Didnt found any food, going random\n";
+        if (getManhattan(farthestPoint, {me->getX(), me->getY()}) <= me->getViewDistance())
+                farthestPoint = {-1, -1};
+
+        if (farthestPoint.first == -1)
+            farthestPoint = getRandomFarPoint(me, game->getMapWidth(), game->getMapHeight());
+
+        nextGoingPoints = getFarthestInVD(me, farthestPoint);
         currentStatus = "Kargar: Going to some random direction";
     }
 
 
     if (goingPath.size() == 0) {
-        cout << "Current:" << me->getX() << "," << me->getY() << "\n";
-        cout << "Going:" << nextGoingPoints.first << "," << nextGoingPoints.second << "\n";
+        //cout << "Current:" << me->getX() << "," << me->getY() << "\n";
+        //cout << "Going:" << nextGoingPoints.first << "," << nextGoingPoints.second << "\n";
         goingPath = findPath(me, nextGoingPoints);
     }
-    cout << "Jan Jan\n";
-        
+    //cout << "Jan Jan\n";
 
 
-    ++currentTurn;
     Direction direction = getDirection(me);
     previousPoint = {me->getX(), me->getY()};
+    ++currentTurn;
     return new Answer(direction, currentStatus, 10);
+}
+
+AI::AI() {
+    srand(time(nullptr));
 }

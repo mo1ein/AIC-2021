@@ -11,11 +11,12 @@ public:
     void saveMap(const Ant* me);
     vector<pair<int, int>> findPath(const Ant* me, pair<int, int> dest);
     Direction getDirection(const Ant* me);
-    pair<int, int> getFarPoints(const Ant* me);
+    pair<int, int> getRandomFarPoint(const Ant* me, int width, int height);
     vector<pair<int, int>> getResourcePath(const Ant* me);
     pair<int, int> findFarthestPointOnMap(const Ant* me, int width, int height);
     pair<int, int> getFarthestInVD(const Ant* me, pair<int, int> dest);
     bool isInRange(int x, int y);
+    AI();
 
     vector<vector<int>> savedMap;
     int currentTurn=0;
