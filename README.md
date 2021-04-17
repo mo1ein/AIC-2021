@@ -3,9 +3,12 @@ All things for AIC 2021
 - [x] signup AIC
 - [x] create team
 - [x] run server
-- [ ] write cheatsheet
-- [ ] scenarios
-- [ ] main logic
+- [x] base code
+- [ ] use bfs for find food if no foods around
+- [ ] use algorithms for zip strings
+- [ ] broadcast
+- [ ] sarbaz navigation :)))
+- [ ] strategy
 
 
 
@@ -17,7 +20,5 @@ cd ../../../  # (know you are in ./AIC-2021)
 chmod +x ./setup.sh
 ./setup.sh
 ```
-And open `http://0.0.0.0:8360/` in browser =)
-
 #### All useful links:
 - <http://ants.aichallenge.org/specification.php>

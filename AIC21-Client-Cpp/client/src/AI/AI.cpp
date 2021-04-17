@@ -186,74 +186,10 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
 }
 
 
-/*void AI::saveMap(const Ant* me) {
-    int viewDistance=me->getViewDistance();
-    const Cell* cell;
-
-    // TODO: fix viewDistance
-    // TODO: should not start from -1*viewDistance and go to viewDistance
-    for (int i=-1*viewDistance; i <= viewDistance; ++i)
-        for (int j=-1*viewDistance; j <= viewDistance; ++j) {
-            cell = me->getNeighborCell(i, j);
-            if (cell != nullptr) {
-                if (cell->getType() == WALL) {
-                    savedMap[cell->getX()][cell->getY()] = 0;
-                }
-                else if (cell->getResource()->getType() != NONE) {
-                    savedMap[cell->getX()][cell->getY()] = 2;
-                }
-                else {
-                    savedMap[cell->getX()][cell->getY()] = 1;
-                }
-            }
-        }
-} */
-void AI::saveMap(const Ant* me)
-{
-int viewDistance = me->getViewDistance();
-    bool goadd = true;
-    int row = 0;
-    int col = -1*viewDistance;
-    
-    for (int i = -1*row; i <= row; i++)
-    {
-        const Cell* cell = me->getNeighborCell(i, col);
-        if (cell->getType() == WALL)
-            savedMap[cell->getX()][cell->getY()] = 0;
-
-        else if (cell -> getResource() -> getType() == BREAD)
-            savedMap[cell->getX()][cell->getY()] = 2;
-
-        else if (cell -> getResource() -> getType() == GRASS)
-            savedMap[cell->getX()][cell->getY()] = 3;
-
-        else
-            savedMap[cell->getX()][cell->getY()] = 1;
-            
-        if (col == viewDistance)
-            break;
-        else if (i == row)
-        {
-            if (row == viewDistance) {
-                goadd = false;
-            }
-            if (goadd) {
-                row++;
-                col++;
-                i = -1*row - 1;
-            }
-            else {
-                row--;
-                col++;
-                i = -1*row - 1;
-            }
-        }
-    }
-}
-
 int getManhattan(pair<int, int> a, pair<int, int> b) {
     return (abs(a.first-b.first) + abs(a.second-b.second));
 }
+
 
 // Return farthest point on map for Sarbaz to go
 pair<int, int> AI::findFarthestPointOnMap(const Ant* me, int width, int height) {
@@ -280,6 +216,7 @@ pair<int, int> AI::findFarthestPointOnMap(const Ant* me, int width, int height) 
 
     return {halfWidth, halfHeight};
 }
+
 
 // Return farthest cell in view distance which is nearest to destination 
 pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
@@ -319,7 +256,6 @@ pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
             points.push_back({cell->getX(), cell->getY()});
             distances.push_back(getManhattan({cell->getX(), cell->getY()}, dest));
         }
-
         cell = me->getNeighborCell(-1*i, -1*j);
         if (getManhattan({cell->getX(), cell->getY()}, {x, y}) <= viewDistance && cell->getType() != WALL) {
             points.push_back({cell->getX(), cell->getY()});
@@ -327,7 +263,6 @@ pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
         }
         ++j;
     }
-
     // Finding nearest point to destination
     int lowestDistanceIdx=0;
     for (int i=1; i < distances.size(); ++i) {
@@ -335,9 +270,52 @@ pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
             lowestDistanceIdx = i;
         }
     }
-
     return points[lowestDistanceIdx];
 }
+
+
+void AI::saveMap(const Ant* me)
+{
+    int viewDistance = me->getViewDistance();
+    bool goadd = true;
+    int row = 0;
+    int col = -1*viewDistance;
+    for (int i = -1*row; i <= row; i++)
+    {
+        const Cell* cell = me->getNeighborCell(i, col);
+        if (cell->getType() == WALL)
+            savedMap[cell->getX()][cell->getY()] = 0;
+
+        else if (cell -> getResource() -> getType() == BREAD)
+            savedMap[cell->getX()][cell->getY()] = 2;
+
+        else if (cell -> getResource() -> getType() == GRASS)
+            savedMap[cell->getX()][cell->getY()] = 3;
+
+        else
+            savedMap[cell->getX()][cell->getY()] = 1;
+
+        if (col == viewDistance)
+            break;
+        else if (i == row)
+        {
+            if (row == viewDistance) {
+                goadd = false;
+            }
+            if (goadd) {
+                row++;
+                col++;
+                i = -1*row - 1;
+            }
+            else {
+                row--;
+                col++;
+                i = -1*row - 1;
+            }
+        }
+    }
+}
+
 
 Answer* AI::turn(Game* game)
 {
@@ -391,12 +369,12 @@ Answer* AI::turn(Game* game)
                 // Return Kargar to Base
                 nextGoingPoints.first = game->getBaseX();
                 nextGoingPoints.second = game->getBaseY();
-                currentStatus = "Kargar: Returning to base";
+                //currentStatus = "Kargar: Returning to base";
             }
             else {
                 // Search for food
                 goingPath = getResourcePath(me);
-                currentStatus = "Kargar: Found a resource";
+                //currentStatus = "Kargar: Found a resource";
             }
         }
     }
@@ -425,17 +403,13 @@ Answer* AI::turn(Game* game)
             farthestPoint = getRandomFarPoint(me, game->getMapWidth(), game->getMapHeight());
 
         nextGoingPoints = getFarthestInVD(me, farthestPoint);
-        currentStatus = "Kargar: Going to some random direction";
+        // currentStatus = "Kargar: Going to some random direction";
     }
 
 
     if (goingPath.size() == 0) {
-        //cout << "Current:" << me->getX() << "," << me->getY() << "\n";
-        //cout << "Going:" << nextGoingPoints.first << "," << nextGoingPoints.second << "\n";
         goingPath = findPath(me, nextGoingPoints);
     }
-    //cout << "Jan Jan\n";
-
 
     Direction direction = getDirection(me);
     previousPoint = {me->getX(), me->getY()};
