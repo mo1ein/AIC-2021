@@ -86,7 +86,7 @@ Direction AI::getDirection(const Ant* me)
     int x = me->getX();
     int y = me->getY();
 
-    cout << "Babakht shodim :)" << goingPath.size() << "\n";
+    // cout << "Babakht shodim :)" << goingPath.size() << "\n";
     
     if (goingPath.size() != 0)
     {
