@@ -198,26 +198,47 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
 }
 
 
-void AI::saveMap(const Ant* me) {
-    int viewDistance=me->getViewDistance();
-    const Cell* cell;
+void AI::saveMap(const Ant* me)
+{
+    int viewDistance = me->getViewDistance();
+    bool goadd = true;
+    int row = 0;
+    int col = -1*viewDistance;
+    for (int i = -1*row; i <= row; i++)
+    {
+        const Cell* cell = me->getNeighborCell(i, col);
+        if (cell->getType() == WALL)
+            savedMap[cell->getX()][cell->getY()] = 0;
 
-    // TODO: fix viewDistance
-    // TODO: should not start from -1*viewDistance and go to viewDistance
-    for (int i=-1*viewDistance; i <= viewDistance; ++i)
-        for (int j=-1*viewDistance; j <= viewDistance; ++j) {
-            cell = me->getNeighborCell(i, j);
-            if (cell != nullptr) {
-                if (cell->getType() == WALL) {
-                    savedMap[cell->getX()][cell->getY()] = 0;
-                }
-                else {
-                    savedMap[cell->getX()][cell->getY()] = 1;
-                }
+        else if (cell -> getResource() -> getType() == BREAD)
+            savedMap[cell->getX()][cell->getY()] = 2;
+
+        else if (cell -> getResource() -> getType() == GRASS)
+            savedMap[cell->getX()][cell->getY()] = 3;
+
+        else
+            savedMap[cell->getX()][cell->getY()] = 1;
+
+        if (col == viewDistance)
+            break;
+        else if (i == row)
+        {
+            if (row == viewDistance) {
+                goadd = false;
+            }
+            if (goadd) {
+                row++;
+                col++;
+                i = -1*row - 1;
+            }
+            else {
+                row--;
+                col++;
+                i = -1*row - 1;
             }
         }
+    }
 }
-
 
 Answer* AI::turn(Game* game)
 {
