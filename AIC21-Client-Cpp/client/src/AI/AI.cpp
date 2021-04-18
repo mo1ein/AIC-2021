@@ -69,14 +69,11 @@ vector<pair<int, int>> AI::getResourcePath(const Ant* me)
 
 pair<int, int> AI::getRandomFarPoint(const Ant* me, int width, int height)
 {
-    // TODO: Think about if this random is valid!
     // TODO: Remove enemies base point from random points
-    int randDir = (rand()%200 + me->getX() + me->getY() + currentTurn) % 5;
-    if (randDir == 0) return {width/2, height/2};
-    if (randDir == 1) return {width, 1};
-    if (randDir == 2) return {1, height};
-    if (randDir == 3) return {width, height};
-    if (randDir == 4) return {1, 1};
+    int randDir = (rand()%500 + me->getX() + me->getY() + currentTurn) % randomAreas.size();
+    pair<int, int> randomArea = randomAreas[randDir];
+    randomAreas.erase(randomAreas.begin() + randDir);
+    return randomArea;
 }
 
 
@@ -127,7 +124,8 @@ Direction AI::getDirection(const Ant* me)
     if (cell->getType() != WALL && nextPoint != previousPoint)
         return LEFT;
     
-    // If code reaches here, there is no free path so should return to previous point
+    // If code reaches here, there is no free path so should return to previous point and also forget about going path
+    farthestPoint = {-1, -1};
     if (previousPoint.second < y)
         return UP;
 
@@ -185,29 +183,6 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
     return path;
 }
 
-
-/*void AI::saveMap(const Ant* me) {
-    int viewDistance=me->getViewDistance();
-    const Cell* cell;
-
-    // TODO: fix viewDistance
-    // TODO: should not start from -1*viewDistance and go to viewDistance
-    for (int i=-1*viewDistance; i <= viewDistance; ++i)
-        for (int j=-1*viewDistance; j <= viewDistance; ++j) {
-            cell = me->getNeighborCell(i, j);
-            if (cell != nullptr) {
-                if (cell->getType() == WALL) {
-                    savedMap[cell->getX()][cell->getY()] = 0;
-                }
-                else if (cell->getResource()->getType() != NONE) {
-                    savedMap[cell->getX()][cell->getY()] = 2;
-                }
-                else {
-                    savedMap[cell->getX()][cell->getY()] = 1;
-                }
-            }
-        }
-} */
 void AI::saveMap(const Ant* me)
 {
 int viewDistance = me->getViewDistance();
@@ -348,25 +323,33 @@ Answer* AI::turn(Game* game)
     // Initialize all matrix elements to -1 at beginning of the game
     if (currentTurn == 0)
     {
-        int width=game->getMapWidth();
-        int height=game->getMapHeight();
-        farthestPoint = {-1, -1};
-        savedMap.resize(width);
         mapHeight=game->getMapHeight();
         mapWidth=game->getMapWidth();
+        farthestPoint = {-1, -1};
+        savedMap.resize(mapWidth);
+
         previousPoint = {me->getX(), me->getY()};
 
-        for (int i=0; i < width; ++i)
-            savedMap[i].resize(height);
+        for (int i=0; i < mapWidth; ++i)
+            savedMap[i].resize(mapHeight);
 
-        for (int i=0; i < width; ++i)
-            for (int j=0; j < height; ++j)
+        for (int i=0; i < mapWidth; ++i)
+            for (int j=0; j < mapHeight; ++j)
                 savedMap[i][j] = -1;
 
         //cout << game->getAntType() << "\n";
         //cout << "Starting" << game->getAnt()->getX() << "," << game->getAnt()->getY() << "\n";
     }
 
+    // If all random points have seen, re-initialize them.
+    if (randomAreas.size() == 0) {
+        randomAreas.push_back( {mapWidth/2, mapHeight/2} );
+        randomAreas.push_back( {mapWidth, 1} );
+        randomAreas.push_back( {1, mapHeight} );
+        randomAreas.push_back( {mapWidth, mapHeight} );
+        randomAreas.push_back( {1, 1} );
+        randomAreas.push_back( {mapWidth/2, mapHeight/2} );
+    }
 
     saveMap(me);
 
@@ -403,7 +386,7 @@ Answer* AI::turn(Game* game)
     else
     {
         if (goingPath.size() == 0) {
-            if (getManhattan(farthestPoint, {me->getX(), me->getY()}) <= me->getViewDistance())
+            if (getManhattan(farthestPoint, {me->getX(), me->getY()}) <= me->getViewDistance()-1)
                 farthestPoint = {-1, -1};
             
             if (farthestPoint.first == -1)

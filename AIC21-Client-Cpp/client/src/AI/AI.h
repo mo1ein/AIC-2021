@@ -25,6 +25,7 @@ public:
     int mapHeight;
     int mapWidth;
     pair<int, int> previousPoint;
+    vector<pair<int, int>> randomAreas;
 };
 
 #endif // AIC21_CLIENT_CPP_AI_H
