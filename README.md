@@ -4,10 +4,11 @@ All things for AIC 2021
 - [x] create team
 - [x] run server
 - [x] base code
+- [x] use algorithms for zip strings
+- [x] broadcast
+- [x] sarbaz navigation :)))
 - [ ] use bfs for find food if no foods around
-- [ ] use algorithms for zip strings
-- [ ] broadcast
-- [ ] sarbaz navigation :)))
+- [ ] use broadcast 
 - [ ] strategy
 
 
