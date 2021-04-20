@@ -455,7 +455,7 @@ unsigned char* AI::encodeMessage(const Ant* me)
 }
 
 
-void AI::decodeMessage(const Ant* me, int currentTurn, const Game* game)
+void AI::decodeMessage(const Ant* me, const Game* game)
 {
     // decoding message...
     const ChatBox* mes = game -> getChatBox();
@@ -666,7 +666,7 @@ Answer* AI::turn(Game* game)
 
     //receive ChatBox
     // TODO: if ant is new read all last chats
-    decodeMessage(me, currentTurn, game);
+    decodeMessage(me, game);
     receivePoints(me, game);
 
     if (currentTurn == 1 && me->getType() == KARGAR) {

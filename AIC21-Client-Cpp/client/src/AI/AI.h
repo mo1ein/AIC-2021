@@ -20,7 +20,7 @@ public:
 
     void sendPoints(const Ant* me);
     unsigned char* encodeMessage(const Ant* me);
-    void decodeMessage(const Ant* me, int currentTurn, const Game* game);
+    void decodeMessage(const Ant* me, const Game* game);
     void receivePoints(const Ant* me, const Game* game);
 
     vector<vector<int>> savedMap;
@@ -33,7 +33,7 @@ public:
     pair<int, int> previousPoint;
     pair<int, int> attackPoint;
 
-    int currentTurn=0;
+    int currentTurn = 0;
     int messageValue;
 
     string sendingContents;
