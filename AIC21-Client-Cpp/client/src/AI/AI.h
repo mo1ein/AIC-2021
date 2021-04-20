@@ -17,23 +17,21 @@ public:
     pair<int, int> getFarthestInVD(const Ant* me, pair<int, int> dest);
     bool isInRange(int x, int y);
     AI();
-    
+
     void sendPoints(const Ant* me);
     unsigned char* encodeMessage(const Ant* me);
     void decodeMessage(const Ant* me, int currentTurn, const Game* game);
-    void decodePoints(const Ant* me, const Game* game);
+    void receivePoints(const Ant* me, const Game* game);
 
     vector<vector<int>> savedMap;
     vector<pair<int, int>> goingPath;
     vector<vector<int>> Texts;
     vector<string> dContents;
+    vector<pair<int, int>> randomAreas;
 
     pair<int, int> farthestPoint;
-    pair<int, int> Target{-1, -1};
     pair<int, int> previousPoint;
-    
-    int mapHeight;
-    int mapWidth;
+
     int currentTurn=0;
 
     string sendingContents;

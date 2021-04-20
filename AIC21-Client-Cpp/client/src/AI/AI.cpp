@@ -71,14 +71,11 @@ vector<pair<int, int>> AI::getResourcePath(const Ant* me)
 
 pair<int, int> AI::getRandomFarPoint(const Ant* me, int width, int height)
 {
-    // TODO: Think about if this random is valid!
     // TODO: Remove enemies base point from random points
-    int randDir = (rand()%200 + me->getX() + me->getY() + currentTurn) % 5;
-    if (randDir == 0) return {width/2, height/2};
-    if (randDir == 1) return {width, 1};
-    if (randDir == 2) return {1, height};
-    if (randDir == 3) return {width, height};
-    if (randDir == 4) return {1, 1};
+    int randDir = (rand() % 500 + me->getX() + me->getY() + currentTurn) % randomAreas.size();
+    pair<int, int> randomArea = randomAreas[randDir];
+    randomAreas.erase(randomAreas.begin() + randDir);
+    return randomArea;
 }
 
 
@@ -127,7 +124,8 @@ Direction AI::getDirection(const Ant* me)
     if (cell->getType() != WALL && nextPoint != previousPoint)
         return LEFT;
 
-    // If code reaches here, there is no free path so should return to previous point
+    // If code reaches here, there is no free path so should return to previous point and also forget about going path
+    farthestPoint = {-1, -1};
     if (previousPoint.second < y)
         return UP;
 
@@ -200,19 +198,19 @@ pair<int, int> AI::findFarthestPointOnMap(const Ant* me, int width, int height) 
     int y=me->getY();
 
     if (x >= halfWidth && y >= halfHeight) {
-        return {3, 3};
+        return {1, 1};
     }
 
     if (x <= halfWidth && y >= halfHeight) {
-        return {width-3, 3};
+        return {width-1, 1};
     }
 
     if (x <= halfWidth && y <= halfHeight) {
-        return {width-5, height-5};
+        return {width-1, height-1};
     }
 
     if (x >= halfWidth && y <= halfHeight) {
-        return {3, height-3};
+        return {1, height-1};
     }
 
     return {halfWidth, halfHeight};
@@ -333,11 +331,11 @@ void AI::sendPoints(const Ant* me)
         if (cell->getType() == WALL)
             sendingContents += "00";
         else if (cell -> getResource() -> getType() == BREAD)
-            sendingContents += "01";
-        else if (cell -> getResource() -> getType() == GRASS)
             sendingContents += "10";
-        else
+        else if (cell -> getResource() -> getType() == GRASS)
             sendingContents += "11";
+        else
+            sendingContents += "01";
 
         if (col == viewDistance)
             break;
@@ -365,9 +363,10 @@ unsigned char* AI::encodeMessage(const Ant* me)
 {
     // encoding message...
     string message;
-    string whereGo;
+    // not need whereGo yet
+    string whereGo = "00";
     string antType;
-    string offset = "001";
+    string offset = "001"; // for printable chars
     string currentPointx = bitset<6>(me->getX()).to_string();
     string currentPointy = bitset<6>(me->getY()).to_string();
     // TODO:ADD other things to broadcast if need
@@ -377,6 +376,8 @@ unsigned char* AI::encodeMessage(const Ant* me)
     else
         antType = "1";
 
+    /*
+    // TODO: if not need delete this
     if (currentDir == "UP")
         whereGo = "00";
     else if (currentDir == "RIGHT")
@@ -385,6 +386,7 @@ unsigned char* AI::encodeMessage(const Ant* me)
         whereGo = "10";
     else
         whereGo = "11";
+        */
 
     // fix oon two bit e moft :/
     message = offset + antType + whereGo + "00" + offset;
@@ -444,19 +446,31 @@ void AI::decodeMessage(const Ant* me, int currentTurn, const Game* game)
     // decoding message...
     const ChatBox* mes = game -> getChatBox();
     vector<const Chat*> chats;
-    chats = mes->getAllChatsOfTurn(currentTurn);
 
-    // texts [x, y, jahat]
-    Texts.resize(5);
-    for (int i=0; i < 5; ++i)
-        Texts[i].resize(3);
+    if (currentTurn == 1)
+    {
+        chats = mes->getAllChats();
+        // texts [x, y, jahat]
+        Texts.resize(chats.size());
+        for (int i=0; i < chats.size(); ++i)
+            Texts[i].resize(3);
 
-    dContents.resize(5);
+        dContents.resize(chats.size());
+    }
+    else {
+        chats = mes->getAllChatsOfTurn(currentTurn - 1);
+
+        Texts.resize(chats.size());
+        for (int i=0; i < chats.size(); ++i)
+            Texts[i].resize(3);
+
+        dContents.resize(chats.size());
+    }
 
     int iter = 0;
     for (const Chat* i: chats)
     {
-        if (i -> getText() != "Avale ghazias =)"){
+        if (i -> getText() != "We R going to FUCK :)") {
             string receive = i -> getText();
             string currentPointX = "";
             string currentPointY = "";
@@ -484,11 +498,12 @@ void AI::decodeMessage(const Ant* me, int currentTurn, const Game* game)
             for (int i = 3 * 8 + 3 + 2; i < 4 * 8; i++)
                 content += decodedMessage[i];
 
-            for (int i = 4 * 8 + 3 + 1; i < decodedMessage.size(); i++)
+            for (int i = 4 * 8; i < decodedMessage.size() - 1; i++)
             {
                 if (i % 8 == 0)
                     i += 2;
-                content += decodedMessage[i];
+                else
+                    content += decodedMessage[i];
             }
 
             int decCurrentPointX = bitset<6>(currentPointX).to_ulong();
@@ -513,7 +528,7 @@ void AI::decodeMessage(const Ant* me, int currentTurn, const Game* game)
 }
 
 
-void AI::decodePoints(const Ant* me, const Game* game)
+void AI::receivePoints(const Ant* me, const Game* game)
 {
     int viewDistance = me->getViewDistance();
     // decoding points...
@@ -535,23 +550,21 @@ void AI::decodePoints(const Ant* me, const Game* game)
             if (yy < 0)
                 yy += game->getMapHeight();
 
-            // why this fuck happend :/
-            if (dContents[j] != "")
-            {
-                if (dContents[j][counter] == '0' && dContents[j][counter + 1] == '0')
-                    savedMap[xx][yy] = 0;
-
-                else if (dContents[j][counter] == '0' && dContents[j][counter + 1] == '1')
-                    savedMap[xx][yy] = 1;
-
-                else if (dContents[j][counter] == '1' && dContents[j][counter + 1] == '0')
-                    savedMap[xx][yy] = 2;
-
-                else
-                    savedMap[xx][yy] = 3;
-            }
-            else
+            // wtf problem (i think lower than 5 ants)
+            if (dContents[j] == "")
                 break;
+
+            if (dContents[j][counter] == '0' && dContents[j][counter + 1] == '0')
+                savedMap[xx][yy] = 0;
+
+            else if (dContents[j][counter] == '0' && dContents[j][counter + 1] == '1')
+                savedMap[xx][yy] = 1;
+
+            else if (dContents[j][counter] == '1' && dContents[j][counter + 1] == '0')
+                savedMap[xx][yy] = 2;
+
+            else
+                savedMap[xx][yy] = 3;
 
             counter += 2;
             if (col == viewDistance)
@@ -592,6 +605,7 @@ Answer* AI::turn(Game* game)
         int height=game->getMapHeight();
         farthestPoint = {-1, -1};
         previousPoint = {me->getX(), me->getY()};
+        // not need yet
         currentDir = "CENTER";
 
         savedMap.resize(width);
@@ -603,25 +617,42 @@ Answer* AI::turn(Game* game)
             for (int j=0; j < height; ++j)
                 savedMap[i][j] = -1;
 
-        message = "Avale ghazias =)";
+        message = "We R going to FUCK :)";
+    }
+
+    // If all random points have seen, re-initialize them.
+    if (randomAreas.size() == 0) {
+        int width=game->getMapWidth();
+        int height=game->getMapHeight();
+        randomAreas.push_back( {width / 2, height / 2} );
+        randomAreas.push_back( {width, 1} );
+        randomAreas.push_back( {1, height} );
+        randomAreas.push_back( {width, height} );
+        randomAreas.push_back( {1, 1} );
+        randomAreas.push_back( {width / 2, height / 2} );
     }
 
     saveMap(me);
 
-    // TODO: why just kargar is random?
+    //receive ChatBox
+    // TODO: if ant is new read all last chats
+    decodeMessage(me, currentTurn, game);
+    receivePoints(me, game);
+
     if (currentTurn == 1 && me->getType() == KARGAR) {
-        int randDir=rand()%4;
-        // cout << "Random number" << rand() << " " << randDir << "\n";
+        int randDir = rand() % 4;
         if (randDir == 0) direction = UP;
         else if (randDir == 1) direction = RIGHT;
         else if (randDir == 2) direction = LEFT;
         else if (randDir == 3) direction = DOWN;
 
+        // not need yet
         if (direction == UP) nextDir = "UP";
         else if (direction == DOWN) nextDir = "DOWN";
         else if (direction == RIGHT) nextDir = "RIGHT";
         else nextDir = "LEFT";
-        return new Answer(direction);
+
+        return new Answer(direction, message, messageValue);
     }
 
     if (me->getType() == AntType::KARGAR)
@@ -638,16 +669,26 @@ Answer* AI::turn(Game* game)
         }
     }
     else {
+        // Lock on target
+        if (game->getAttacks().size() != 0)
+        {
+            for (const Attack* attack : game->getAttacks()) {
+                pair<int, int> attacker = {attack->getAttackerColumn(), attack->getAttackerRow()};
+                if (getManhattan(attacker, {me->getX(), me->getY()}) <= 1) {
+                    goingPath.clear();
+                    nextGoingPoints = {attack->getDefenderColumn(), attack->getDefenderRow()};
+                    goingPath = findPath(me, nextGoingPoints);
+                    break;
+                }
+            }
+        }
         if (goingPath.size() == 0) {
-            if (getManhattan(farthestPoint, {me->getX(), me->getY()}) <= me->getViewDistance())
+            if (getManhattan(farthestPoint, {me->getX(), me->getY()}) <= me->getViewDistance()-1)
                 farthestPoint = {-1, -1};
 
             if (farthestPoint.first == -1)
                 farthestPoint = getRandomFarPoint(me, game->getMapWidth(), game->getMapHeight());
-
-            //cout << "Farthest:" << farthestPoint.first << "," << farthestPoint.second << "\n";
             nextGoingPoints = getFarthestInVD(me, farthestPoint);
-            //cout << "IN VD:" << nextGoingPoints.first << "," << nextGoingPoints.second << "\n";
         }
     }
 
@@ -662,13 +703,13 @@ Answer* AI::turn(Game* game)
             	farthestPoint = getRandomFarPoint(me, game->getMapWidth(), game->getMapHeight());
 
         	nextGoingPoints = getFarthestInVD(me, farthestPoint);
-        	// currentStatus = "Kargar: Going to some random direction";
     	}
 
     if (goingPath.size() == 0)
         goingPath = findPath(me, nextGoingPoints);
 
-    currentDir = nextDir;
+    // TODO: if not used delete send dir in chat
+    //currentDir = nextDir;
 
     // send ChatBox
     unsigned char* mess = new unsigned char[20];
@@ -677,13 +718,9 @@ Answer* AI::turn(Game* game)
     for (int i = 0; i < 20; i++)
         message += mess[i];
 
-    //receive ChatBox
-    // TODO: if ant is new read all chatbox
-    decodeMessage(me, currentTurn, game);
-    decodePoints(me, game);
-
     direction = getDirection(me);
 
+    /*
     if (direction == UP)
         nextDir = "UP";
     else if (direction == DOWN)
@@ -693,6 +730,7 @@ Answer* AI::turn(Game* game)
     else
         nextDir = "LEFT";
 
+        */
     previousPoint = {me->getX(), me->getY()};
     return new Answer(direction, message, messageValue);
 }
