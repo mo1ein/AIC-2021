@@ -471,7 +471,9 @@ void AI::decodeMessage(const Ant* me, int currentTurn, const Game* game)
 
         dContents.resize(chats.size());
         dAttack.resize(chats.size());
-        currentTurn = chats.back() -> getTurn() + 1;
+
+        if (chats.size() != 0)
+            currentTurn = chats.back() -> getTurn() + 1;
     }
     else {
         chats = mes->getAllChatsOfTurn(currentTurn - 1);
