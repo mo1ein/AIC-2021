@@ -7,8 +7,8 @@ All things for AIC 2021
 - [x] use algorithms for zip strings
 - [x] broadcast
 - [x] sarbaz navigation :)))
-- [ ] use bfs for find food if no foods around
-- [ ] use broadcast 
+- [x] use broadcast
+- [ ] optimize sarbaz navigation
 - [ ] strategy
 
 
