@@ -31,12 +31,16 @@ public:
 
     pair<int, int> farthestPoint;
     pair<int, int> previousPoint;
+    pair<int, int> attackPoint;
 
     int currentTurn=0;
 
     string sendingContents;
     string currentDir;
     string nextDir;
+
+    bool ImInAttack;
+    vector<bool> dAttack;
 
 };
 

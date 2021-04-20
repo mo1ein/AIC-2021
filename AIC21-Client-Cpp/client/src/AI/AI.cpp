@@ -364,9 +364,10 @@ unsigned char* AI::encodeMessage(const Ant* me)
     // encoding message...
     string message;
     // not need whereGo yet
+    string offset = "001"; // for printable chars
     string whereGo = "00";
     string antType;
-    string offset = "001"; // for printable chars
+    string isAttacked;
     string currentPointx = bitset<6>(me->getX()).to_string();
     string currentPointy = bitset<6>(me->getY()).to_string();
     // TODO:ADD other things to broadcast if need
@@ -414,8 +415,15 @@ unsigned char* AI::encodeMessage(const Ant* me)
         }
         message += sendingContents[i];
     }
-    // just for fill 8bit
-    message += '0';
+
+    if (ImInAttack)
+        isAttacked = "1";
+    else
+        isAttacked = "0";
+
+    // our last bit of message
+    message += isAttacked;
+    //message += '0';
     // ta in ja 160 bits = 20 bytes :)
 
     unsigned char* encodedMessage = new unsigned char[message.size() / 8];
@@ -456,6 +464,8 @@ void AI::decodeMessage(const Ant* me, int currentTurn, const Game* game)
             Texts[i].resize(3);
 
         dContents.resize(chats.size());
+        dAttack.resize(chats.size());
+        currentTurn = chats.back() -> getTurn() + 1;
     }
     else {
         chats = mes->getAllChatsOfTurn(currentTurn - 1);
@@ -465,6 +475,7 @@ void AI::decodeMessage(const Ant* me, int currentTurn, const Game* game)
             Texts[i].resize(3);
 
         dContents.resize(chats.size());
+        dAttack.resize(chats.size());
     }
 
     int iter = 0;
@@ -506,6 +517,11 @@ void AI::decodeMessage(const Ant* me, int currentTurn, const Game* game)
                     content += decodedMessage[i];
             }
 
+            if (decodedMessage[decodedMessage.size() - 1] == '1')
+                dAttack[iter] = true;
+            else
+                dAttack[iter] = false;
+
             int decCurrentPointX = bitset<6>(currentPointX).to_ulong();
             int decCurrentPointY = bitset<6>(currentPointY).to_ulong();
 
@@ -533,13 +549,16 @@ void AI::receivePoints(const Ant* me, const Game* game)
     int viewDistance = me->getViewDistance();
     // decoding points...
     for (int j = 0; j < Texts.size(); j++){
-            int x = Texts[j][0];
-            int y = Texts[j][1];
+        int x = Texts[j][0];
+        int y = Texts[j][1];
 
-            bool goadd = true;
-            int row = 0;
-            int col = -1*viewDistance;
-            int counter = 0;
+        bool goadd = true;
+        int row = 0;
+        int col = -1*viewDistance;
+        int counter = 0;
+
+        if (dAttack[j])
+            attackPoint = {x, y};
 
         for (int i = -1*row; i <= row; i++){
             int xx = (x + i)  %  game->getMapWidth();
@@ -594,8 +613,9 @@ Answer* AI::turn(Game* game)
 {
     const Ant* me = game->getAnt();
     pair<int, int> nextGoingPoints{-1, -1}; // (x, y)
+    attackPoint  = {-1, -1};
     string message = "";
-    int messageValue = 10;
+    int messageValue;
     Direction direction;
     ++currentTurn;
 
@@ -638,6 +658,11 @@ Answer* AI::turn(Game* game)
     // TODO: if ant is new read all last chats
     decodeMessage(me, currentTurn, game);
     receivePoints(me, game);
+
+    if (attackPoint.first == -1 && attackPoint.second == -1)
+        messageValue = 10;
+    else
+        messageValue = 15;
 
     if (currentTurn == 1 && me->getType() == KARGAR) {
         int randDir = rand() % 4;
