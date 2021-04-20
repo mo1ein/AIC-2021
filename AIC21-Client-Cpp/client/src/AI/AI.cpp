@@ -328,14 +328,20 @@ void AI::sendPoints(const Ant* me)
     for (int i = -1*row; i <= row; i++)
     {
         const Cell* cell = me->getNeighborCell(i, col);
-        if (cell->getType() == WALL)
+        if (cell->getType() == WALL){
             sendingContents += "00";
-        else if (cell -> getResource() -> getType() == BREAD)
+        }
+        else if (cell -> getResource() -> getType() == BREAD){
             sendingContents += "10";
-        else if (cell -> getResource() -> getType() == GRASS)
+            messageValue = 30;
+        }
+        else if (cell -> getResource() -> getType() == GRASS){
             sendingContents += "11";
-        else
+            messageValue = 30;
+        }
+        else{
             sendingContents += "01";
+        }
 
         if (col == viewDistance)
             break;
@@ -615,7 +621,9 @@ Answer* AI::turn(Game* game)
     pair<int, int> nextGoingPoints{-1, -1}; // (x, y)
     attackPoint  = {-1, -1};
     string message = "";
-    int messageValue;
+    // 10: viewDistance, 20: attack, 30: food
+    messageValue = 10;
+    //ImInAttack = false;
     Direction direction;
     ++currentTurn;
 
@@ -626,7 +634,7 @@ Answer* AI::turn(Game* game)
         farthestPoint = {-1, -1};
         previousPoint = {me->getX(), me->getY()};
         // not need yet
-        currentDir = "CENTER";
+        //currentDir = "CENTER";
 
         savedMap.resize(width);
         for (int i=0; i < width; ++i)
@@ -658,11 +666,6 @@ Answer* AI::turn(Game* game)
     // TODO: if ant is new read all last chats
     decodeMessage(me, currentTurn, game);
     receivePoints(me, game);
-
-    if (attackPoint.first == -1 && attackPoint.second == -1)
-        messageValue = 10;
-    else
-        messageValue = 15;
 
     if (currentTurn == 1 && me->getType() == KARGAR) {
         int randDir = rand() % 4;
@@ -745,6 +748,8 @@ Answer* AI::turn(Game* game)
 
     direction = getDirection(me);
 
+    if (ImInAttack && messageValue == 10)
+        messageValue = 20;
     /*
     if (direction == UP)
         nextDir = "UP";

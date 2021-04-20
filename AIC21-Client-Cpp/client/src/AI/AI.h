@@ -34,6 +34,7 @@ public:
     pair<int, int> attackPoint;
 
     int currentTurn=0;
+    int messageValue;
 
     string sendingContents;
     string currentDir;
