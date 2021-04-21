@@ -18,14 +18,31 @@ public:
     bool isInRange(int x, int y);
     AI();
 
+    void sendPoints(const Ant* me);
+    unsigned char* encodeMessage(const Ant* me);
+    void decodeMessage(const Ant* me, const Game* game);
+    void receivePoints(const Ant* me, const Game* game);
+
     vector<vector<int>> savedMap;
-    int currentTurn=0;
     vector<pair<int, int>> goingPath;
-    pair<int, int> farthestPoint;
-    int mapHeight;
-    int mapWidth;
-    pair<int, int> previousPoint;
+    vector<vector<int>> Texts;
+    vector<string> dContents;
     vector<pair<int, int>> randomAreas;
+
+    pair<int, int> farthestPoint;
+    pair<int, int> previousPoint;
+    pair<int, int> attackPoint;
+
+    int currentTurn=0;
+    int messageValue;
+
+    string sendingContents;
+    string currentDir;
+    string nextDir;
+
+    bool ImInAttack;
+    vector<bool> dAttack;
+
 };
 
 #endif // AIC21_CLIENT_CPP_AI_H
