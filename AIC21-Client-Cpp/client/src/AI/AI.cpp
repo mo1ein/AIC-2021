@@ -621,6 +621,7 @@ Answer* AI::turn(Game* game)
     const Ant* me = game->getAnt();
     pair<int, int> nextGoingPoints{-1, -1}; // (x, y)
     attackPoint = {-1, -1};
+    ImInAttack = false;
 
     string message = "";
     // 10: viewDistance, 20: attack, 30: food
@@ -636,7 +637,6 @@ Answer* AI::turn(Game* game)
         previousPoint = {me->getX(), me->getY()};
         // not need yet
         currentDir = "CENTER";
-        ImInAttack = false;
 
         savedMap.resize(width);
         for (int i=0; i < width; ++i)
