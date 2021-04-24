@@ -8,14 +8,12 @@ All things for AIC 2021
 - [x] broadcast
 - [x] sarbaz navigation :)))
 - [x] use broadcast
-- [ ] optimize sarbaz navigation
-- [ ] strategy
-
+- [x] optimize sarbaz navigation
+- [x] strategy
 
 
 ## Run
-For run server on webgl easily... <br />
-After editing project:
+For run server easily... <br />
 ```
 cd ../../../  # (know you are in ./AIC-2021)
 chmod +x ./setup.sh

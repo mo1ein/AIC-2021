@@ -122,21 +122,29 @@ void Controller::turn_event(AI *client, Game *tmp_game, EventQueue *m_event_queu
     int THREAD_NUM = Controller::thread_count++;
     try {
         Logger::Get(LogLevel_DEBUG) << "Launched action Thread #" << THREAD_NUM << endl;
+        int start = getTime();
         Answer* answer = client->turn(tmp_game);
-        Logger::Get(LogLevel_TRACE) << "Recieved client answer" << endl;
+        int passed = getTime() - start;
+        Logger::Get(LogLevel_TRACE) << "Recieved client answer in " << passed << "ms." << endl;
 
-        m_event_queue->push(CreateMovementMessage(getDirectionNum(answer->getDirection())));
-        if (!answer->getMessage().empty())
-            m_event_queue->push(CreateChatBoxMessage(answer->getMessage(), answer->getMessageValue()));
+        if (passed <= 1000) {
+            m_event_queue->push(CreateMovementMessage(getDirectionNum(answer->getDirection())));
+            if (!answer->getMessage().empty())
+                m_event_queue->push(CreateChatBoxMessage(answer->getMessage(), answer->getMessageValue()));
+        }
+        else {
+            Logger::Get(LogLevel_WARNING) << "Turn timeout passed! Action not applied." << endl;
+        }
+        if (passed <= 2000) {
+            Logger::Get(LogLevel_TRACE) << "action:Sending end message" << endl;
+            m_event_queue->push(CreateEndTurnMessage());
+        }
         delete answer;
     }
     catch (const char *err_msg) {
         Logger::Get(LogLevel_ERROR) << "Error in action Thread #" << THREAD_NUM << endl
                                     << err_msg << endl;
     }
-
-    Logger::Get(LogLevel_TRACE) << "action:Sending end message" << endl;
-    m_event_queue->push(CreateEndTurnMessage());
 
     delete tmp_game;
     Logger::Get(LogLevel_DEBUG) << "End of action Thread #" << THREAD_NUM << endl;
