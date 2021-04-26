@@ -48,13 +48,64 @@ vector<pair<int, int>> AI::getResourcePath(const Ant* me)
         }
 
         for (pair<int, int> direction : directions) {
-            pair<int, int> neighbour{node.first+direction.first, node.second+direction.second};
+            pair<int, int> neighbour{(node.first+direction.first) % width,
+                                     (node.second+direction.second) % height};
+            if (neighbour.first < 0)
+                neighbour.first += width;
 
-            if (neighbour.first < 0 || neighbour.second < 0 ||
-                neighbour.first >= savedMap.size() ||
-                neighbour.second >= savedMap[0].size() ||
-                savedMap[neighbour.first][neighbour.second] == -1 ||
+            if (neighbour.second < 0)
+                neighbour.second += height;
+
+            if (savedMap[neighbour.first][neighbour.second] == -1 ||
                 savedMap[neighbour.first][neighbour.second] == 0)
+            {
+                continue;
+            }
+            if (visited.find(neighbour) != visited.end()) {
+                continue;
+            }
+            visited[neighbour] = node;
+            neighbors.push(neighbour);
+        }
+    }
+    return path;
+}
+
+
+vector<pair<int, int>> AI::findFirstUnfound(const Ant* me)
+{
+    pair<int, int> node;
+    pair<int, int> start_node{me->getX(), me->getY()};
+    queue<pair<int, int>> neighbors;
+    vector<pair<int, int>> path;
+    unordered_map<pair<int, int>, pair<int, int>, hash_pair> visited;
+    const Cell* cell;
+
+    neighbors.push(start_node);
+    while (neighbors.size() > 0) {
+        node = neighbors.front();
+        neighbors.pop();
+
+        if (savedMap[node.first][node.second] == -1)
+        {
+            while (node != start_node) {
+                path.push_back(node);
+                node = visited[node];
+            }
+            // Return the path to destination in reversed format
+            return path;
+        }
+
+        for (pair<int, int> direction : directions) {
+            pair<int, int> neighbour{(node.first+direction.first) % width,
+                                     (node.second+direction.second) % height};
+            if (neighbour.first < 0)
+                neighbour.first += width;
+
+            if (neighbour.second < 0)
+                neighbour.second += height;
+
+            if (savedMap[neighbour.first][neighbour.second] == 0)
             {
                 continue;
             }
@@ -79,6 +130,11 @@ pair<int, int> AI::getRandomFarPoint(const Ant* me, int width, int height)
 }
 
 
+int getManhattan(pair<int, int> a, pair<int, int> b) {
+    return (abs(a.first-b.first) + abs(a.second-b.second));
+}
+
+
 // Create a Direction object based on current position and next points
 Direction AI::getDirection(const Ant* me)
 {
@@ -90,52 +146,98 @@ Direction AI::getDirection(const Ant* me)
         pair<int, int> latestPath = goingPath.back();
         goingPath.pop_back();
 
-        if (latestPath.second < y)
-            return UP;
+        if (getManhattan(latestPath, {x, y}) == 1) {
+            if (latestPath.second < y)
+                return UP;
 
-        if (latestPath.second > y)
-            return DOWN;
+            if (latestPath.second > y)
+                return DOWN;
 
-        if (latestPath.first < x)
-            return LEFT;
+            if (latestPath.first < x)
+                return LEFT;
 
-        if (latestPath.first > x)
-            return RIGHT;
+            if (latestPath.first > x)
+                return RIGHT;
+        }
+        else {
+            if (latestPath.second < y)
+                return DOWN;
+
+            if (latestPath.second > y)
+                return UP;
+
+            if (latestPath.first < x)
+                return RIGHT;
+
+            if (latestPath.first > x)
+                return LEFT;
+        }
     }
-
-    // If code reaches here, try to find a free path that is not point
+    // If code reaches here, try to find a free path that is not point and also forget about going path
+    farthestPoint = {-1, -1};
     const Cell* cell = me->getNeighborCell(0, -1);
     pair<int, int> nextPoint = {cell->getX(), cell->getY()};
-    if (cell->getType() != WALL && nextPoint != previousPoint)
-        return UP;
+    if (cell->getType() != WALL && nextPoint != previousPoint) {
+        if (getManhattan(nextPoint, {x, y}) == 1)
+            return UP;
+        else
+            return DOWN;
+    }
 
     cell = me->getNeighborCell(1, 0);
     nextPoint = {cell->getX(), cell->getY()};
-    if (cell->getType() != WALL && nextPoint != previousPoint)
-        return RIGHT;
+    if (cell->getType() != WALL && nextPoint != previousPoint) {
+        if (getManhattan(nextPoint, {x, y}) == 1)
+            return RIGHT;
+        else
+            return LEFT;
+    }
 
     cell = me->getNeighborCell(0, 1);
     nextPoint = {cell->getX(), cell->getY()};
-    if (cell->getType() != WALL && nextPoint != previousPoint)
-        return DOWN;
-
+    if (cell->getType() != WALL && nextPoint != previousPoint) {
+        if (getManhattan(nextPoint, {x, y}) == 1)
+            return DOWN;
+        else
+            return UP;
+    }
     cell = me->getNeighborCell(-1, 0);
     nextPoint = {cell->getX(), cell->getY()};
-    if (cell->getType() != WALL && nextPoint != previousPoint)
-        return LEFT;
+    if (cell->getType() != WALL && nextPoint != previousPoint) {
+        if (getManhattan(nextPoint, {x, y}) == 1)
+            return LEFT;
+        else
+            return RIGHT;
+    }
 
-    // If code reaches here, there is no free path so should return to previous point and also forget about going path
-    farthestPoint = {-1, -1};
-    if (previousPoint.second < y)
-        return UP;
+    // If code reaches here, there is no free path so should return to previous point
+    if (previousPoint.second < y) {
+        if (getManhattan(nextPoint, {x, y}) == 1)
+            return UP;
+        else
+            return DOWN;
+    }
 
-    if (previousPoint.second > y)
-        return DOWN;
+    if (previousPoint.second > y) {
+        if (getManhattan(nextPoint, {x, y}) == 1)
+            return DOWN;
+        else
+            return UP;
+    }
 
-    if (previousPoint.first < x)
-        return LEFT;
+    if (previousPoint.first < x) {
+        if (getManhattan(nextPoint, {x, y}) == 1)
+            return LEFT;
+        else
+            return RIGHT;
+    }
 
-    return RIGHT;
+    if (previousPoint.first > x) {
+        if (getManhattan(nextPoint, {x, y}) == 1)
+            return RIGHT;
+        else
+            return LEFT;
+    }
 }
 
 
@@ -164,29 +266,29 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
         }
 
         for (pair<int, int> direction : directions) {
-            pair<int, int> neighbour{node.first+direction.first, node.second+direction.second};
+            pair<int, int> neighbour{(node.first+direction.first) % width,
+                                     (node.second+direction.second) % height};
+            if (neighbour.first < 0)
+                neighbour.first += width;
 
-            if (neighbour.first < 0 || neighbour.second < 0 ||
-                neighbour.first >= savedMap.size() ||
-                neighbour.second >= savedMap[0].size() ||
-                savedMap[neighbour.first][neighbour.second] == -1 ||
+            if (neighbour.second < 0)
+                neighbour.second += height;
+
+            if (savedMap[neighbour.first][neighbour.second] == -1 ||
                 savedMap[neighbour.first][neighbour.second] == 0)
             {
                 continue;
             }
+
             if (visited.find(neighbour) != visited.end()) {
                 continue;
             }
+
             visited[neighbour] = node;
             neighbors.push(neighbour);
         }
     }
     return path;
-}
-
-
-int getManhattan(pair<int, int> a, pair<int, int> b) {
-    return (abs(a.first-b.first) + abs(a.second-b.second));
 }
 
 
@@ -197,21 +299,17 @@ pair<int, int> AI::findFarthestPointOnMap(const Ant* me, int width, int height) 
     int x=me->getX();
     int y=me->getY();
 
-    if (x >= halfWidth && y >= halfHeight) {
+    if (x >= halfWidth && y >= halfHeight)
         return {1, 1};
-    }
 
-    if (x <= halfWidth && y >= halfHeight) {
+    if (x <= halfWidth && y >= halfHeight)
         return {width-1, 1};
-    }
 
-    if (x <= halfWidth && y <= halfHeight) {
+    if (x <= halfWidth && y <= halfHeight)
         return {width-1, height-1};
-    }
 
-    if (x >= halfWidth && y <= halfHeight) {
+    if (x >= halfWidth && y <= halfHeight)
         return {1, height-1};
-    }
 
     return {halfWidth, halfHeight};
 }
@@ -275,6 +373,7 @@ pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
 
 void AI::saveMap(const Ant* me)
 {
+    sendingContents = "";
     int viewDistance = me->getViewDistance();
     bool goadd = true;
     int row = 0;
@@ -283,64 +382,37 @@ void AI::saveMap(const Ant* me)
     {
         const Cell* cell = me->getNeighborCell(i, col);
         if (cell->getType() == WALL)
-            savedMap[cell->getX()][cell->getY()] = 0;
-
-        else if (cell -> getResource() -> getType() == BREAD)
-            savedMap[cell->getX()][cell->getY()] = 2;
-
-        else if (cell -> getResource() -> getType() == GRASS)
-            savedMap[cell->getX()][cell->getY()] = 3;
-
-        else
-            savedMap[cell->getX()][cell->getY()] = 1;
-
-        if (col == viewDistance)
-            break;
-        else if (i == row)
         {
-            if (row == viewDistance) {
-                goadd = false;
-            }
-            if (goadd) {
-                row++;
-                col++;
-                i = -1*row - 1;
-            }
-            else {
-                row--;
-                col++;
-                i = -1*row - 1;
-            }
-        }
-    }
-}
-
-
-void AI::sendPoints(const Ant* me)
-{
-    sendingContents = "";
-    int viewDistance = me->getViewDistance();
-    bool goadd = true;
-    int row = 0;
-    int col = -1*viewDistance;
-
-    // encoding points...
-    for (int i = -1*row; i <= row; i++)
-    {
-        const Cell* cell = me->getNeighborCell(i, col);
-        if (cell->getType() == WALL){
+            savedMap[cell->getX()][cell->getY()] = 0;
             sendingContents += "00";
         }
-        else if (cell -> getResource() -> getType() == BREAD){
+        else if (cell -> getResource() -> getType() == BREAD)
+        {
+            savedMap[cell->getX()][cell->getY()] = 2;
             sendingContents += "10";
             messageValue = 30;
         }
-        else if (cell -> getResource() -> getType() == GRASS){
+        else if (cell -> getResource() -> getType() == GRASS)
+        {
+            savedMap[cell->getX()][cell->getY()] = 3;
             sendingContents += "11";
             messageValue = 30;
         }
-        else{
+        else
+        {
+            savedMap[cell->getX()][cell->getY()] = 1;
             sendingContents += "01";
+        }
+
+        if (cell->getType() == BASE &&
+            cell->getX() != ourBase.first &&
+            cell->getY() != ourBase.second)
+        {
+            messageValue = 40;
+            string x = to_string(cell->getX());
+            string y = to_string(cell->getY());
+            x += y;
+            enemyBase = x;
         }
 
         if (col == viewDistance)
@@ -363,15 +435,13 @@ void AI::sendPoints(const Ant* me)
         }
     }
 }
-
 
 unsigned char* AI::encodeMessage(const Ant* me)
 {
     // encoding message...
     string message;
-    // not need whereGo yet
     string offset = "001"; // for printable chars
-    string whereGo = "00";
+    string whereGo = "11";
     string antType;
     string isAttacked;
     string currentPointx = bitset<6>(me->getX()).to_string();
@@ -382,18 +452,6 @@ unsigned char* AI::encodeMessage(const Ant* me)
         antType = "0";
     else
         antType = "1";
-
-    /*
-    // TODO: if not need delete this
-    if (currentDir == "UP")
-        whereGo = "00";
-    else if (currentDir == "RIGHT")
-        whereGo = "01";
-    else if (currentDir == "DOWN")
-        whereGo = "10";
-    else
-        whereGo = "11";
-        */
 
     // fix oon two bit e moft :/
     message = offset + antType + whereGo + "00" + offset;
@@ -465,9 +523,10 @@ void AI::decodeMessage(const Ant* me, const Game* game)
     {
         chats = mes->getAllChats();
         // texts [x, y, jahat]
+        // TODO; jahat is not used resize array to 2
         Texts.resize(chats.size());
         for (int i=0; i < chats.size(); ++i)
-            Texts[i].resize(3);
+            Texts[i].resize(2);
 
         dContents.resize(chats.size());
         dAttack.resize(chats.size());
@@ -479,7 +538,7 @@ void AI::decodeMessage(const Ant* me, const Game* game)
 
         Texts.resize(chats.size());
         for (int i=0; i < chats.size(); ++i)
-            Texts[i].resize(3);
+            Texts[i].resize(2);
 
         dContents.resize(chats.size());
         dAttack.resize(chats.size());
@@ -493,15 +552,36 @@ void AI::decodeMessage(const Ant* me, const Game* game)
             string currentPointX = "";
             string currentPointY = "";
             string decodedMessage = "";
+            string enemyX = "";
+            string enemyY = "";
             string content = "";
             string typeAnt;
-            string whereGo = "";
 
-            for (int i = 0; i < receive.size(); i++)
-                decodedMessage += bitset<8>(int(receive[i])).to_string();
+            // if 20 byte
+            if (receive.size() == 20)
+            {
+                for (int i = 0; i < receive.size(); i++)
+                    decodedMessage += bitset<8>(int(receive[i])).to_string();
+            }
+            else // 24byte
+            {
+                for (int i = 0; i < receive.size() - 4; i++)
+                    decodedMessage += bitset<8>(int(receive[i])).to_string();
 
+                enemyX = receive[20];
+                enemyX += receive[21];
+
+                enemyY = receive[22];
+                enemyY+= receive[23];
+
+                enemyPoint = {stoi(enemyX), stoi(enemyY)};
+            }
+
+            /* not need this
             whereGo = decodedMessage[4];
             whereGo += decodedMessage[5];
+            */
+
             typeAnt = decodedMessage[6];
 
             for (int i = 1 * 8 + 3; i < 2 * 8; i++)
@@ -535,21 +615,11 @@ void AI::decodeMessage(const Ant* me, const Game* game)
             Texts[iter][0] = decCurrentPointX;
             Texts[iter][1] = decCurrentPointY;
 
-            if (whereGo == "00")
-                Texts[iter][2] = 0;
-            else if (whereGo == "01")
-                Texts[iter][2] = 1;
-            else if (whereGo == "10")
-                Texts[iter][2] = 2;
-            else
-                Texts[iter][2] = 3;
-
             dContents[iter] = content;
             iter++;
         }
     }
 }
-
 
 void AI::receivePoints(const Ant* me, const Game* game)
 {
@@ -623,20 +693,25 @@ Answer* AI::turn(Game* game)
     attackPoint = {-1, -1};
     ImInAttack = false;
 
+	 // means not found Enemy base yet
+    enemyBase = "-1-1";
+    enemyPoint = {-1, -1};
+
     string message = "";
-    // 10: viewDistance, 20: attack, 30: food
+    // 10: viewDistance, 20: attack, 30: food, 40: found enemy base
     messageValue = 10;
     Direction direction;
     ++currentTurn;
 
     if (currentTurn == 1)
     {
-        int width=game->getMapWidth();
-        int height=game->getMapHeight();
-        farthestPoint = {-1, -1};
+        width=game->getMapWidth();
+        height=game->getMapHeight();
         previousPoint = {me->getX(), me->getY()};
-        // not need yet
-        currentDir = "CENTER";
+        farthestPoint = {-1, -1};
+        ourBase = {me->getX(), me->getY()};
+
+        shuffle(directions.begin(), directions.end(), rng);
 
         savedMap.resize(width);
         for (int i=0; i < width; ++i)
@@ -652,14 +727,13 @@ Answer* AI::turn(Game* game)
 
     // If all random points have seen, re-initialize them.
     if (randomAreas.size() == 0) {
-        int width=game->getMapWidth();
-        int height=game->getMapHeight();
         randomAreas.push_back( {width / 2, height / 2} );
         randomAreas.push_back( {width-1, 1} );
         randomAreas.push_back( {1, height-1} );
         randomAreas.push_back( {width-1, height-1} );
         randomAreas.push_back( {1, 1} );
         randomAreas.push_back( {width / 2, height / 2} );
+        shuffle(randomAreas.begin(), randomAreas.end(), rng);
     }
 
     saveMap(me);
@@ -668,8 +742,14 @@ Answer* AI::turn(Game* game)
     decodeMessage(me, game);
     receivePoints(me, game);
 
+    // if found enemyBase Go fuck base
+    if (me->getType() == SARBAZ && enemyPoint.first != -1 && enemyPoint.second != -1)
+    {
+        nextGoingPoints = {enemyPoint.first, enemyPoint.second};
+        goingPath = findPath(me, nextGoingPoints);
+    }
     // Atacks Part
-    if (game->getAttacks().size() != 0)
+    else if (game->getAttacks().size() != 0)
     {
         for (const Attack* attack : game->getAttacks()) {
             pair<int, int> defender = {attack->getDefenderColumn(), attack->getDefenderRow()};
@@ -685,15 +765,30 @@ Answer* AI::turn(Game* game)
                     goingPath.clear();
                     nextGoingPoints = {attack->getDefenderColumn(), attack->getDefenderRow()};
                     goingPath = findPath(me, nextGoingPoints);
+                    // If we attack the base, then base will be Defender and we will be Attacker
+                    
+                    if (getManhattan(defender, {me->getX(), me->getY()}) <= 4 &&
+                        me->getNeighborCell(defender.first - me->getX(), 
+                                            defender.second - me->getY())->getType() == BASE)
+                    {
+                        break;
+                    }
                 }
             }
         }
     }
 
+    // If unfounded point by Sarbaz is a block, remove it
+    if (me->getType() == SARBAZ && goingPath.size() == 1)
+        if (savedMap[goingPath[0].first][goingPath[0].second] == 0)
+            goingPath.clear();
+
+
     if (me->getType() == AntType::KARGAR)
     {
-        if (goingPath.size() == 0) {
+        if (goingPath.size() == 0 || currentTurn % 2 == 0) {
             if (me->getCurrentResource()->getType() != ResourceType::NONE) {
+                goingPath.clear();
                 nextGoingPoints.first = game->getBaseX();
                 nextGoingPoints.second = game->getBaseY();
             }
@@ -704,26 +799,18 @@ Answer* AI::turn(Game* game)
         }
     }
     else {
-        if (goingPath.size() == 0) {
-            if (getManhattan(farthestPoint, {me->getX(), me->getY()}) <= me->getViewDistance()-1)
-                farthestPoint = {-1, -1};
-
-            if (farthestPoint.first == -1)
-                farthestPoint = getRandomFarPoint(me, game->getMapWidth(), game->getMapHeight());
-            
-            // Go for helping to attacked ant
-            if (attackPoint.first != -1 && getManhattan(attackPoint, {me->getX(), me->getY()}) <= 12) {
+        if (goingPath.size() == 0 || attackPoint.first != -1) {
+ 	    // Go for helping to attacked ant
+        // TODO: 12 should based on map size
+            int distance = getManhattan(attackPoint, {me->getX(), me->getY()});
+            if (attackPoint.first != -1 && distance <= 12 && distance >= 2) {
+                goingPath.clear();
                 goingPath = findPath(me, attackPoint);
             }
-            else if (savedMap[farthestPoint.first][farthestPoint.second] != -1) {
-                // If random point is founded by broadcast, go with BFS
-                goingPath = findPath(me, farthestPoint);
-                // To make sure our Sarbaz will move if something bad happened
-                if (goingPath.size() == 0) nextGoingPoints = getFarthestInVD(me, farthestPoint);
-            }
             else {
-                nextGoingPoints = getFarthestInVD(me, farthestPoint);
-            }   
+                // Go to first -1 point on map
+                goingPath = findFirstUnfound(me);
+            }
         }
     }
 
@@ -734,12 +821,6 @@ Answer* AI::turn(Game* game)
         else if (randDir == 1) direction = RIGHT;
         else if (randDir == 2) direction = LEFT;
         else if (randDir == 3) direction = DOWN;
-
-        // not need yet
-        if (direction == UP) nextDir = "UP";
-        else if (direction == DOWN) nextDir = "DOWN";
-        else if (direction == RIGHT) nextDir = "RIGHT";
-        else nextDir = "LEFT";
 
         return new Answer(direction, message, messageValue);
     }
@@ -762,37 +843,25 @@ Answer* AI::turn(Game* game)
             }
             else {
                 nextGoingPoints = getFarthestInVD(me, farthestPoint);
-            } 
+            }
     	}
 
     if (goingPath.size() == 0)
         goingPath = findPath(me, nextGoingPoints);
 
-    // TODO: if not used delete send dir in chat
-    //currentDir = nextDir;
-
     // send ChatBox
     unsigned char* mess = new unsigned char[20];
-    sendPoints(me);
     mess = encodeMessage(me);
     for (int i = 0; i < 20; i++)
         message += mess[i];
+    if (enemyBase != "-1-1")
+        message += enemyBase;
 
     direction = getDirection(me);
 
-    if (ImInAttack && messageValue == 10)
+    if (ImInAttack && messageValue < 30)
         messageValue = 20;
-    /*
-    if (direction == UP)
-        nextDir = "UP";
-    else if (direction == DOWN)
-        nextDir = "DOWN";
-    else if (direction == RIGHT)
-        nextDir = "RIGHT";
-    else
-        nextDir = "LEFT";
 
-        */
     previousPoint = {me->getX(), me->getY()};
     return new Answer(direction, message, messageValue);
 }
@@ -800,4 +869,5 @@ Answer* AI::turn(Game* game)
 
 AI::AI() {
     srand(time(nullptr));
+    rng.seed(time(nullptr));
 }
