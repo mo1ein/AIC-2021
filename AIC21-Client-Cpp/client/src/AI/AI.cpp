@@ -390,13 +390,17 @@ void AI::saveMap(const Ant* me)
         {
             savedMap[cell->getX()][cell->getY()] = 2;
             sendingContents += "10";
-            messageValue = 30;
+
+            if (messageValue < 30)
+                messageValue = 30;
         }
         else if (cell -> getResource() -> getType() == GRASS)
         {
             savedMap[cell->getX()][cell->getY()] = 3;
             sendingContents += "11";
-            messageValue = 30;
+
+            if (messageValue < 30)
+                messageValue = 30;
         }
         else
         {
@@ -408,9 +412,27 @@ void AI::saveMap(const Ant* me)
             cell->getX() != ourBase.first &&
             cell->getY() != ourBase.second)
         {
-            messageValue = 40;
-            string x = to_string(cell->getX());
-            string y = to_string(cell->getY());
+            messageValue = 70;
+
+            string x = "";
+            string y = "";
+
+            if (cell->getX() < 10) {
+                x = '0';
+                x += to_string(cell->getX());
+            }
+            else {
+                x = to_string(cell->getX());
+            }
+
+            if (cell->getY() < 10) {
+                y = '0';
+                y += to_string(cell->getY());
+            }
+            else {
+                y = to_string(cell->getY());
+            }
+
             x += y;
             enemyBase = x;
         }
@@ -487,7 +509,7 @@ unsigned char* AI::encodeMessage(const Ant* me)
 
     // our last bit of message
     message += isAttacked;
-    //message += '0';
+    // message += '0';
     // ta in ja 160 bits = 20 bytes :)
 
     unsigned char* encodedMessage = new unsigned char[message.size() / 8];
@@ -563,24 +585,27 @@ void AI::decodeMessage(const Ant* me, const Game* game)
                 for (int i = 0; i < receive.size(); i++)
                     decodedMessage += bitset<8>(int(receive[i])).to_string();
             }
-            else // 24byte
+            else // found enemy base location (24 byte)
             {
                 for (int i = 0; i < receive.size() - 4; i++)
                     decodedMessage += bitset<8>(int(receive[i])).to_string();
 
-                enemyX = receive[20];
-                enemyX += receive[21];
+                if (receive[20] == '0')
+                    enemyX = receive[21];
+                else {
+                    enemyX = receive[20];
+                    enemyX += receive[21];
+                }
 
-                enemyY = receive[22];
-                enemyY+= receive[23];
+                if (receive[22] == '0')
+                    enemyY = receive[23];
+                else {
+                    enemyY = receive[22];
+                    enemyY += receive[23];
+                }
 
                 enemyPoint = {stoi(enemyX), stoi(enemyY)};
             }
-
-            /* not need this
-            whereGo = decodedMessage[4];
-            whereGo += decodedMessage[5];
-            */
 
             typeAnt = decodedMessage[6];
 
@@ -692,13 +717,14 @@ Answer* AI::turn(Game* game)
     pair<int, int> nextGoingPoints{-1, -1}; // (x, y)
     attackPoint = {-1, -1};
     ImInAttack = false;
+    foundBase = false;
 
 	 // means not found Enemy base yet
-    enemyBase = "-1-1";
+    enemyBase = "";
     enemyPoint = {-1, -1};
 
     string message = "";
-    // 10: viewDistance, 20: attack, 30: food, 40: found enemy base
+    // 10: viewDistance, 20: attack, 30: food, 70: found enemy base
     messageValue = 10;
     Direction direction;
     ++currentTurn;
@@ -743,8 +769,13 @@ Answer* AI::turn(Game* game)
     receivePoints(me, game);
 
     // if found enemyBase Go fuck base
-    if (me->getType() == SARBAZ && enemyPoint.first != -1 && enemyPoint.second != -1)
+    if (me->getType() == SARBAZ &&
+        enemyPoint.first != -1 &&
+        enemyPoint.second != -1 &&
+        !foundBase)
     {
+        foundBase = true;
+        goingPath.clear();
         nextGoingPoints = {enemyPoint.first, enemyPoint.second};
         goingPath = findPath(me, nextGoingPoints);
     }
@@ -766,9 +797,10 @@ Answer* AI::turn(Game* game)
                     nextGoingPoints = {attack->getDefenderColumn(), attack->getDefenderRow()};
                     goingPath = findPath(me, nextGoingPoints);
                     // If we attack the base, then base will be Defender and we will be Attacker
-                    
+
+                    // TODO: use viewDistance instead of 4
                     if (getManhattan(defender, {me->getX(), me->getY()}) <= 4 &&
-                        me->getNeighborCell(defender.first - me->getX(), 
+                        me->getNeighborCell(defender.first - me->getX(),
                                             defender.second - me->getY())->getType() == BASE)
                     {
                         break;
@@ -854,7 +886,7 @@ Answer* AI::turn(Game* game)
     mess = encodeMessage(me);
     for (int i = 0; i < 20; i++)
         message += mess[i];
-    if (enemyBase != "-1-1")
+    if (enemyBase != "")
         message += enemyBase;
 
     direction = getDirection(me);

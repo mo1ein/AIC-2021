@@ -46,6 +46,7 @@ public:
     string enemyBase;
 
     bool ImInAttack;
+    bool foundBase;
     vector<bool> dAttack;
 };
 
