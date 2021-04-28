@@ -38,6 +38,7 @@ public:
 
     int width;
     int height;
+    int maxHeightOrWidth;
     int messageValue;
     int currentTurn = 0;
     std::default_random_engine rng;

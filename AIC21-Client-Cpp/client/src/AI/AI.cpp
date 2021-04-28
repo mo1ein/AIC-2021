@@ -388,19 +388,19 @@ void AI::saveMap(const Ant* me)
         }
         else if (cell -> getResource() -> getType() == BREAD)
         {
+            if (savedMap[cell->getX()][cell->getY()] == -1 && messageValue < 30)
+                messageValue = 30;
+            
             savedMap[cell->getX()][cell->getY()] = 2;
             sendingContents += "10";
-
-            if (messageValue < 30)
-                messageValue = 30;
         }
         else if (cell -> getResource() -> getType() == GRASS)
         {
+            if (savedMap[cell->getX()][cell->getY()] == -1 && messageValue < 30)
+                messageValue = 30;
+
             savedMap[cell->getX()][cell->getY()] = 3;
             sendingContents += "11";
-
-            if (messageValue < 30)
-                messageValue = 30;
         }
         else
         {
@@ -724,8 +724,11 @@ Answer* AI::turn(Game* game)
     enemyPoint = {-1, -1};
 
     string message = "";
-    // 10: viewDistance, 20: attack, 30: food, 70: found enemy base
-    messageValue = 10;
+    // 10: Kargar viewDistance, 15: Sarbaz viewDistance, 20: attack, 30: food, 70: found enemy base
+    if (me->getType() == SARBAZ)
+        messageValue = 15;
+    else
+        messageValue = 10;
     Direction direction;
     ++currentTurn;
 
@@ -736,6 +739,11 @@ Answer* AI::turn(Game* game)
         previousPoint = {me->getX(), me->getY()};
         farthestPoint = {-1, -1};
         ourBase = {me->getX(), me->getY()};
+        
+        if (height > width)
+            maxHeightOrWidth = height;
+        else
+            maxHeightOrWidth = width;
 
         shuffle(directions.begin(), directions.end(), rng);
 
@@ -768,6 +776,12 @@ Answer* AI::turn(Game* game)
     decodeMessage(me, game);
     receivePoints(me, game);
 
+    //If stuck, reset going path
+    pair<int ,int> currentPoint = {me->getX(), me->getY()};
+    if (currentPoint == previousPoint)
+        goingPath.clear();
+
+
     // if found enemyBase Go fuck base
     if (me->getType() == SARBAZ &&
         enemyPoint.first != -1 &&
@@ -788,7 +802,7 @@ Answer* AI::turn(Game* game)
                 ImInAttack = true;
             }
             // Lock on target
-            if (me->getType() == SARBAZ)
+            if (me->getType() == SARBAZ && enemyPoint.first == -1)
             {
                 pair<int, int> attacker = {attack->getAttackerColumn(), attack->getAttackerRow()};
 
@@ -798,8 +812,7 @@ Answer* AI::turn(Game* game)
                     goingPath = findPath(me, nextGoingPoints);
                     // If we attack the base, then base will be Defender and we will be Attacker
 
-                    // TODO: use viewDistance instead of 4
-                    if (getManhattan(defender, {me->getX(), me->getY()}) <= 4 &&
+                    if (getManhattan(defender, {me->getX(), me->getY()}) <= me->getViewDistance() &&
                         me->getNeighborCell(defender.first - me->getX(),
                                             defender.second - me->getY())->getType() == BASE)
                     {
@@ -833,9 +846,8 @@ Answer* AI::turn(Game* game)
     else {
         if (goingPath.size() == 0 || attackPoint.first != -1) {
  	    // Go for helping to attacked ant
-        // TODO: 12 should based on map size
             int distance = getManhattan(attackPoint, {me->getX(), me->getY()});
-            if (attackPoint.first != -1 && distance <= 12 && distance >= 2) {
+            if (attackPoint.first != -1 && distance <= maxHeightOrWidth/2 && distance >= 2) {
                 goingPath.clear();
                 goingPath = findPath(me, attackPoint);
             }
