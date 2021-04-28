@@ -384,28 +384,43 @@ void AI::saveMap(const Ant* me)
         if (cell->getType() == WALL)
         {
             savedMap[cell->getX()][cell->getY()] = 0;
-            sendingContents += "00";
+            sendingContents += "000";
         }
+
+        else if (cell->getType() == TRAP)
+        {
+            savedMap[cell->getX()][cell->getY()] = 4;
+            sendingContents += "100";
+        }
+
+        else if (cell->getType() == SWAMP)
+        {
+            savedMap[cell->getX()][cell->getY()] = 5;
+            sendingContents += "101";
+        }
+
         else if (cell -> getResource() -> getType() == BREAD)
         {
             if (savedMap[cell->getX()][cell->getY()] == -1 && messageValue < 30)
                 messageValue = 30;
-            
+
             savedMap[cell->getX()][cell->getY()] = 2;
-            sendingContents += "10";
+            sendingContents += "010";
         }
+
         else if (cell -> getResource() -> getType() == GRASS)
         {
             if (savedMap[cell->getX()][cell->getY()] == -1 && messageValue < 30)
                 messageValue = 30;
 
             savedMap[cell->getX()][cell->getY()] = 3;
-            sendingContents += "11";
+            sendingContents += "011";
         }
+
         else
         {
             savedMap[cell->getX()][cell->getY()] = 1;
-            sendingContents += "01";
+            sendingContents += "001";
         }
 
         if (cell->getType() == BASE &&
@@ -675,19 +690,44 @@ void AI::receivePoints(const Ant* me, const Game* game)
             if (dContents[j] == "")
                 break;
 
-            if (dContents[j][counter] == '0' && dContents[j][counter + 1] == '0')
-                savedMap[xx][yy] = 0;
+            // BLOCK
+            if (dContents[j][counter] == '0' &&
+                dContents[j][counter + 1] == '0' &&
+                dContents[j][counter + 2] == '0'
+                ) savedMap[xx][yy] = 0;
 
-            else if (dContents[j][counter] == '0' && dContents[j][counter + 1] == '1')
-                savedMap[xx][yy] = 1;
+            // TRAP
+            else if (dContents[j][counter] == '1' &&
+                dContents[j][counter + 1] == '0' &&
+                dContents[j][counter + 2] == '0'
+                ) savedMap[xx][yy] = 4;
 
-            else if (dContents[j][counter] == '1' && dContents[j][counter + 1] == '0')
-                savedMap[xx][yy] = 2;
+            // SWAMP
+            else if (dContents[j][counter] == '1' &&
+                dContents[j][counter + 1] == '0' &&
+                dContents[j][counter + 2] == '1'
+                ) savedMap[xx][yy] = 5;
 
-            else
-                savedMap[xx][yy] = 3;
+            // EMPTY
+            else if (dContents[j][counter] == '0' &&
+                dContents[j][counter + 1] == '0' &&
+                dContents[j][counter + 2] == '1'
+                ) savedMap[xx][yy] = 1;
 
-            counter += 2;
+            // BREAD
+            else if (dContents[j][counter] == '0' &&
+                dContents[j][counter + 1] == '1' &&
+                dContents[j][counter + 2] == '0'
+                ) savedMap[xx][yy] = 2;
+
+            // GRASS
+            else if (dContents[j][counter] == '0' &&
+                dContents[j][counter + 1] == '1' &&
+                dContents[j][counter + 2] == '1'
+                ) savedMap[xx][yy] = 3;
+
+
+            counter += 3;
             if (col == viewDistance)
                 break;
             else if (i == row)
@@ -739,7 +779,7 @@ Answer* AI::turn(Game* game)
         previousPoint = {me->getX(), me->getY()};
         farthestPoint = {-1, -1};
         ourBase = {me->getX(), me->getY()};
-        
+
         if (height > width)
             maxHeightOrWidth = height;
         else
