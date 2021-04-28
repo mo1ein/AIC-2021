@@ -10,6 +10,10 @@ CellType EnumUtils::getCellTypeByInt(int cellType) {
             return EMPTY;
         case 2:
             return WALL;
+        case 3:
+            return TRAP;
+        case 4:
+            return SWAMP;
         default:
             throw ParseError("Unsupported cell_type : "+ to_string(cellType));
     }

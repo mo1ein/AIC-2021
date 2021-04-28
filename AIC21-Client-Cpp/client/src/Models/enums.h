@@ -17,7 +17,9 @@ enum AntType {
 enum CellType {
     BASE,
     EMPTY,
-    WALL
+    WALL,
+    TRAP,
+    SWAMP
 };
 
 enum ResourceType {
