@@ -8,4 +8,4 @@ make
 cd client
 cp ./client ../../../server/
 cd ../../../server/
-sudo java -jar server-v1.3.0.jar --first-team=./client --second-team=./client
+sudo java -jar server-v1.3.4.jar --first-team=./client --second-team=./client
