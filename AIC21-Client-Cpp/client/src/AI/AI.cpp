@@ -7,8 +7,6 @@
 #include <string>
 #include <bitset>
 
-using namespace std;
-
 vector<pair<int, int>> directions{{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
 // For creating map with pair type keys
@@ -58,7 +56,8 @@ vector<pair<int, int>> AI::getResourcePath(const Ant* me)
 
             if (savedMap[neighbour.first][neighbour.second] == -1 ||
                 savedMap[neighbour.first][neighbour.second] == 0 ||
-                savedMap[neighbour.first][neighbour.second] == 5)
+                savedMap[neighbour.first][neighbour.second] == 5 ||
+                savedMap[neighbour.first][neighbour.second] == 4)
             {
                 continue;
             }
@@ -301,7 +300,6 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
 
     neighbors.push(start_node);
 
-    //TODO: if cant go in dest. cant find path because cant see map enough!
     while (neighbors.size() > 0) {
         node = neighbors.front();
         neighbors.pop();
@@ -324,7 +322,7 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
             if (neighbour.second < 0)
                 neighbour.second += height;
 
-            if (me->getType() == KARGAR && me->getCurrentResource()->getValue() != 0)
+            if (me->getType() == KARGAR && me->getCurrentResource()->getType() != ResourceType::NONE)
             {
                 if (savedMap[neighbour.first][neighbour.second] == -1 ||
                     savedMap[neighbour.first][neighbour.second] == 0 ||
@@ -352,6 +350,58 @@ vector<pair<int, int>> AI::findPath(const Ant* me, pair<int, int> dest)
     return path;
 }
 
+vector<pair<int, int>> AI::findPathWithoutTraps(const Ant* me, pair<int, int> dest)
+{
+    pair<int, int> node;
+    pair<int, int> start_node{me->getX(), me->getY()};
+    queue<pair<int, int>> neighbors;
+    vector<pair<int, int>> path;
+    unordered_map<pair<int, int>, pair<int, int>, hash_pair> visited;
+
+    neighbors.push(start_node);
+
+    while (neighbors.size() > 0) {
+        node = neighbors.front();
+        neighbors.pop();
+        if (node == dest) {
+            node = dest;
+            while (node != start_node) {
+                path.push_back(node);
+                node = visited[node];
+            }
+            // Return the path to destination in reversed format
+            return path;
+        }
+
+        for (pair<int, int> direction : directions) {
+            pair<int, int> neighbour{(node.first+direction.first) % width,
+                                     (node.second+direction.second) % height};
+            if (neighbour.first < 0)
+                neighbour.first += width;
+
+            if (neighbour.second < 0)
+                neighbour.second += height;
+
+            if (savedMap[neighbour.first][neighbour.second] == -1 ||
+                savedMap[neighbour.first][neighbour.second] == 0 ||
+                savedMap[neighbour.first][neighbour.second] == 5 ||
+                savedMap[neighbour.first][neighbour.second] == 4)
+            {
+                continue;
+            }
+
+
+            if (visited.find(neighbour) != visited.end()) {
+                continue;
+            }
+
+            visited[neighbour] = node;
+            neighbors.push(neighbour);
+        }
+    }
+    return path;
+}
+
 vector<pair<int, int>> AI::findPathSafe(const Ant* me, pair<int, int> dest)
 {
     pair<int, int> node;
@@ -362,7 +412,6 @@ vector<pair<int, int>> AI::findPathSafe(const Ant* me, pair<int, int> dest)
 
     neighbors.push(start_node);
 
-    //TODO: if cant go in dest. cant find path because cant see map enough!
     while (neighbors.size() > 0) {
         node = neighbors.front();
         neighbors.pop();
@@ -429,9 +478,9 @@ pair<int, int> AI::findFarthestPointOnMap(const Ant* me, int width, int height) 
 // Return farthest cell in view distance which is nearest to destination
 pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
 {
-    int x=me->getX();
-    int y=me->getY();
-    int viewDistance=me->getViewDistance();
+    int x = me->getX();
+    int y = me->getY();
+    int viewDistance = me->getViewDistance();
     const Cell* cell;
     vector<pair<int, int>> points;
     vector<int> distances;
@@ -441,7 +490,6 @@ pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
     for (int i=-1*viewDistance; i <= 0; ++i)
     {
         cell = me->getNeighborCell(i, j);
-        // TODO: This is just for testing, should changed with better condition
         if (getManhattan({cell->getX(), cell->getY()}, {x, y}) <= viewDistance && cell->getType() != WALL) {
             points.push_back({cell->getX(), cell->getY()});
             distances.push_back(getManhattan({cell->getX(), cell->getY()}, dest));
@@ -456,8 +504,8 @@ pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
     }
 
     // Top-Right and Down-Left Diagonals
-    j=1;
-    for (int i=(-1*viewDistance)+1; i < 0; ++i)
+    j = 1;
+    for (int i = (-1*viewDistance) + 1; i < 0; ++i)
     {
         cell = me->getNeighborCell(i, j);
         if (getManhattan({cell->getX(), cell->getY()}, {x, y}) <= viewDistance && cell->getType() != WALL) {
@@ -471,6 +519,10 @@ pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
         }
         ++j;
     }
+
+    if (points.size() == 0)
+        return {-1, -1};
+
     // Finding nearest point to destination
     int lowestDistanceIdx=0;
     for (int i=1; i < distances.size(); ++i) {
@@ -478,6 +530,7 @@ pair<int, int> AI::getFarthestInVD(const Ant* me, pair<int, int> dest)
             lowestDistanceIdx = i;
         }
     }
+
     return points[lowestDistanceIdx];
 }
 
@@ -528,8 +581,7 @@ void AI::saveMap(const Ant* me)
             sendingContents += "011";
         }
 
-        else
-        {
+        else {
             savedMap[cell->getX()][cell->getY()] = 1;
             sendingContents += "001";
         }
@@ -568,14 +620,12 @@ unsigned char* AI::encodeMessage(const Ant* me)
     // encoding message...
     string message;
     string offset = "001"; // for printable chars
-    // string whereGo = "1";
     string antType;
     string isAttacked;
     string enemyBaseX = "";
     string enemyBaseY = "";
     string currentPointx = bitset<6>(me->getX()).to_string();
     string currentPointy = bitset<6>(me->getY()).to_string();
-    // TODO:ADD other things to broadcast if need
 
     if (me -> getType() == KARGAR)
         antType = "0";
@@ -587,24 +637,31 @@ unsigned char* AI::encodeMessage(const Ant* me)
     else
         isAttacked = "0";
 
-    // 3 bits for fill
+    // 3 bits for fill byte
     message = offset + "000" + antType + isAttacked + offset;
 
+    // encoding current x point of ant
     for (int i = 0; i < 5; i++)
         message += currentPointx[i];
 
     message += offset + currentPointx[5];
 
+    // encoding current y point of ant
     for (int i = 0; i < 4; i++)
         message += currentPointy[i];
 
+    // offset for start of a new byte
     message += offset;
+
+    // join bytes together
     message = message + currentPointy[4] + currentPointy[5];
 
     for(int i = 0; i < 3; i++)
         message += sendingContents[i];
-    // ta in ja 4 byte 32 bit
 
+    // === used 32 bit = 4 byte until here ===
+
+    // joining sendingContents with other parts
     int iter = 3;
     for (int i = 3; i < sendingContents.size(); i++) {
         if (i == iter){
@@ -613,37 +670,41 @@ unsigned char* AI::encodeMessage(const Ant* me)
         }
         message += sendingContents[i];
     }
-    // ta inja 224 bits = 28 bytes
 
-    // Enemy point
+    // === used 224 bit = 4 byte until here ===
+
+    // encoding Enemy point
     if (enemyPoint.first != -1)
     {
         enemyBaseX = bitset<6>(enemyPoint.first).to_string();
         enemyBaseY = bitset<6>(enemyPoint.second).to_string();
 
+        // encoding enemy x point
         message += offset;
         for (int i = 0; i < enemyBaseX.size() - 1; i++)
             message += enemyBaseX[i];
         message += offset;
         message += enemyBaseX[5];
 
+        // encoding enemy y point
         for (int i = 0; i < enemyBaseY.size() - 2; i++)
             message += enemyBaseY[i];
         message += offset;
         message += enemyBaseY[4];
         message += enemyBaseY[5];
 
-        // just for fill 8 bit
+        // just for fill byte
         message += "000";
     }
 
+    // fill char with zeros
     unsigned char* encodedMessage = new unsigned char[message.size() / 8];
     for(int i = 0; i < message.size() / 8; i++)
         encodedMessage[i] = 0;
 
+    // fill chars with binary values
     int j = 0;
     int counter = 0;
-    // or counter > 0 in while loop
     while (j < message.size())
     {
         string part;
@@ -714,6 +775,7 @@ void AI::decodeMessage(const Ant* me, const Game* game)
             else
                 dAttack[iter] = false;
 
+            // decoding current x and y points of ant
             for (int i = 1 * 8 + 3; i < 2 * 8; i++)
                 currentPointX += decodedMessage[i];
             currentPointX += decodedMessage[2 * 8 + 3];
@@ -732,7 +794,7 @@ void AI::decodeMessage(const Ant* me, const Game* game)
             else
                 endOfPoints = decodedMessage.size() - (3 * 8);
 
-            // point types
+            // decoding content of points
             for (int i = 4 * 8; i < endOfPoints; i++)
             {
                 if (i % 8 == 0)
@@ -741,6 +803,7 @@ void AI::decodeMessage(const Ant* me, const Game* game)
                     content += decodedMessage[i];
             }
 
+            // decode enemybase if founded
             if (receive.size() == 31)
             {
                 for (int i = 227; i < 232; i++)
@@ -864,11 +927,19 @@ Answer* AI::turn(Game* game)
     ImInAttack = false;
     string message = "";
 
-    // 10: Kargar viewDistance, 15: Sarbaz viewDistance, 20: attack, 30: food, 70: found enemy base
+    /* messageValues:
+        10: Kargar viewDistance,
+        15: Sarbaz viewDistance,
+        20: attack,
+        30: food,
+        70: found enemy base
+    */
+
     if (me->getType() == SARBAZ)
         messageValue = 15;
     else
         messageValue = 10;
+
     Direction direction;
     ++currentTurn;
 
@@ -880,6 +951,8 @@ Answer* AI::turn(Game* game)
         farthestPoint = {-1, -1};
         ourBase = {me->getX(), me->getY()};
         foundBase = false;
+        goingHome = false;
+
 	    // means not found Enemy base yet
         enemyPoint = {-1, -1};
 
@@ -887,8 +960,6 @@ Answer* AI::turn(Game* game)
             maxHeightOrWidth = height;
         else
             maxHeightOrWidth = width;
-
-        // shuffle(directions.begin(), directions.end(), rng);
 
         savedMap.resize(width);
         for (int i=0; i < width; ++i)
@@ -946,9 +1017,14 @@ Answer* AI::turn(Game* game)
 
     //If stuck, reset going path
     pair<int ,int> currentPoint = {me->getX(), me->getY()};
-    if (currentPoint == previousPoint)
+    if (currentPoint == previousPoint) {
         goingPath.clear();
+        goingHome = false;
+    }
 
+    // If Kargar bring food to our base, mark as ready for searching new food
+    if (me->getType() == KARGAR && currentPoint == ourBase)
+        goingHome = false;
 
     // if found enemyBase Go fuck base
     if (me->getType() == SARBAZ &&
@@ -980,12 +1056,6 @@ Answer* AI::turn(Game* game)
                     goingPath = findPath(me, nextGoingPoints);
                     // If we attack the base, then base will be Defender and we will be Attacker
 
-                    /*if (getManhattan(defender, {me->getX(), me->getY()}) <= me->getViewDistance() &&
-                        me->getNeighborCell(defender.first - me->getX(),
-                                            defender.second - me->getY())->getType() == BASE)
-                    {
-                        break;
-                    } */
                     if (getManhattan(defender, {me->getX(), me->getY()}) > me->getAttackDistance())
                         break;
                 }
@@ -1001,11 +1071,13 @@ Answer* AI::turn(Game* game)
 
     if (me->getType() == AntType::KARGAR)
     {
-        if (goingPath.size() == 0 || currentTurn % 2 == 0) {
+        if ((goingPath.size() == 0 || currentTurn % 2 == 0) && !goingHome) {
             if (me->getCurrentResource()->getType() != ResourceType::NONE) {
                 goingPath.clear();
                 nextGoingPoints.first = game->getBaseX();
                 nextGoingPoints.second = game->getBaseY();
+                goingPath = findPathWithoutTraps(me, nextGoingPoints);
+                goingHome = true;
             }
             else {
                 // Search for food
@@ -1063,8 +1135,11 @@ Answer* AI::turn(Game* game)
     	}
 
     if (goingPath.size() == 0)
+        goingPath = findPathWithoutTraps(me, nextGoingPoints);
+    // If prevoius call didn't find a way, way has Swamps and Traps in it
+    if (goingPath.size() == 0)
         goingPath = findPath(me, nextGoingPoints);
-    // If prevoius call didn't find a way, way has traps in it
+    // If prevoius call didn't find a way, way has Traps in it
     if (goingPath.size() == 0)
         goingPath = findPathSafe(me, nextGoingPoints);
 
