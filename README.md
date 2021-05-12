@@ -1,9 +1,7 @@
 # AIC-2021
 [Sharif AI Challenge 2021](https://github.com/SharifAIChallenge/AIC21-Game)
 <br />
-<a href="https://youtu.be/crN4nuGtiO4">
-    <img alt = "https://youtu.be/crN4nuGtiO4" src="https://github.com/mo1ein/AIC-2021/blob/master/screen.png">
-</a>
+[<img src="https://github.com/mo1ein/AIC-2021/blob/master/screen.png">](https://youtu.be/crN4nuGtiO4)
 <br />
 - [x] signup AIC
 - [x] create team
