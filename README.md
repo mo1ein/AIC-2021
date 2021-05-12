@@ -1,8 +1,5 @@
 # AIC-2021
-[Sharif AI Challenge 2021](https://github.com/SharifAIChallenge/AIC21-Game)
-<br />
-[<img src="https://github.com/mo1ein/AIC-2021/blob/master/screen.png">](https://youtu.be/crN4nuGtiO4)
-<br />
+### [Sharif AI Challenge 2021](https://github.com/SharifAIChallenge/AIC21-Game)
 - [x] signup AIC
 - [x] create team
 - [x] run server
@@ -14,6 +11,8 @@
 - [x] optimize sarbaz navigation
 - [x] strategy
 
+[![photo](/screen.png)](https://youtu.be/crN4nuGtiO4)
+<br />
 
 ## Run
 For run server easily... <br />
