@@ -1,5 +1,10 @@
 # AIC-2021
-[Sharif AI Challenge 2021]('https://github.com/SharifAIChallenge/AIC21-Game')
+[Sharif AI Challenge 2021](https://github.com/SharifAIChallenge/AIC21-Game)
+<br />
+<a href="https://youtu.be/crN4nuGtiO4">
+    <img alt = "https://youtu.be/crN4nuGtiO4" src="https://github.com/mo1ein/AIC-2021/blob/master/screen.png">
+</a>
+<br />
 - [x] signup AIC
 - [x] create team
 - [x] run server
@@ -14,9 +19,14 @@
 
 ## Run
 For run server easily... <br />
+First download `LinuxV1.5.3.zip` <br />From https://github.com/SharifAIChallenge/AIC21-Game/blob/main/visualizer/LinuxV1.5.3.zip
+and unzip that.
 ```
 git clone https://github.com/mo1ein/AIC-2021.git
 cd ./AIC-2021
+```
+Move `LinuxV1.5.3` to `./AIC-2021`
+```
 chmod +x ./LinuxV1.5.3/LinuxV1.x86_64
 chmod +x ./setup.sh
 ./setup.sh
